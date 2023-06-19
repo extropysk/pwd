@@ -25,11 +25,9 @@ export class AuthController {
   ) {
     try {
       await this.authService.verify(k1, sig, key, response);
-      console.log("OK");
       return { status: Status.Ok };
     } catch (error) {
-      console.log(error.message);
-      return { status: Status.Error, message: error.message };
+      return { status: Status.Error, reason: error.message };
     }
   }
 
