@@ -1,58 +1,84 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { JwtService } from "@nestjs/jwt";
 import { randomBytes } from "crypto";
 import { Response } from "express";
 import * as lnurl from "lnurl";
-import * as ms from "ms";
-import { UserDto } from "src/auth/dto/user.dto";
+import { PayloadDto } from "src/auth/dto/payload.dto";
+import { Payload } from "src/auth/interfaces/payload.interface";
+import { Token } from "src/auth/interfaces/token.interface";
+import { StorageService } from "src/storage/storage.service";
+import { expToDate } from "src/utils/date-utils";
 
 export const SESSION_COOKIE_NAME = "session";
 export const JWT_COOKIE_NAME = "jwt";
+export const SESSION_PREFIX = "session";
 
 @Injectable()
 export class AuthService {
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService,
-    private eventEmitter: EventEmitter2
+    private eventEmitter: EventEmitter2,
+    private storageService: StorageService
   ) {}
 
-  async verify(k1: string, sig: string, key: string, response: Response) {
-    if (!lnurl.verifyAuthorizationSignature(sig, k1, key)) {
-      throw new Error("Signature verification failed");
+  async getToken(k1: string, response: Response) {
+    if (!k1) {
+      throw new UnauthorizedException();
     }
 
-    const payload = { sub: key };
-    const token = await this.jwtService.signAsync(payload);
+    const payload = await this.storageService.get<Payload>(
+      `${SESSION_PREFIX}/${k1}`
+    );
+    if (!payload?.sub) {
+      throw new UnauthorizedException();
+    }
 
-    response.cookie(JWT_COOKIE_NAME, token, {
+    const jwt = await this.jwtService.signAsync(payload);
+    response.cookie(JWT_COOKIE_NAME, jwt, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
       domain: this.configService.get<string>("COOKIES_DOMAIN"),
-      expires: new Date(
-        Date.now() + ms(this.configService.get<string>("JWT_EXPIRATION"))
-      ),
+      expires: expToDate(this.configService.get<string>("JWT_EXPIRATION")),
     });
-    this.eventEmitter.emit(k1, new UserDto(key));
+    const token: Token = { ...payload, access_token: jwt };
+    return token;
   }
 
-  getSecret(host: string, response: Response) {
+  async callback(k1: string, sig: string, key: string) {
+    const session = await this.storageService.get(`${SESSION_PREFIX}/${k1}`);
+    if (!session) {
+      throw new Error("Unauthorized");
+    }
+
+    if (!lnurl.verifyAuthorizationSignature(sig, k1, key)) {
+      throw new Error("Signature verification failed");
+    }
+
+    const payload: Payload = { sub: key };
+    await this.storageService.set(`${SESSION_PREFIX}/${k1}`, payload);
+    this.eventEmitter.emit(k1, new PayloadDto(payload));
+  }
+
+  async getLnurl(host: string, response: Response) {
     const k1 = randomBytes(32).toString("hex");
 
     const params = new URLSearchParams({
       k1,
       tag: "login",
     });
-    const callbackUrl = `${host}/auth/verify?${params.toString()}`;
+    const callbackUrl = `${host}/auth/callback?${params.toString()}`;
 
+    await this.storageService.set(`${SESSION_PREFIX}/${k1}`, {}, "10m");
     response.cookie(SESSION_COOKIE_NAME, k1, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
       domain: this.configService.get<string>("COOKIES_DOMAIN"),
+      expires: expToDate(this.configService.get<string>("SESSION_EXPIRATION")),
     });
     return { k1, lnurl: lnurl.encode(callbackUrl).toUpperCase() };
   }
