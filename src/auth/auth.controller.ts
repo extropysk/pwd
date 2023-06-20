@@ -6,17 +6,18 @@ import {
   Query,
   Res,
   Sse,
+  UseGuards,
 } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Response } from "express";
 import { Observable, fromEvent, map } from "rxjs";
-import { Auth } from "src/auth/decorators/auth.decorator";
-import { Cookies } from "src/auth/decorators/cookies.decorator";
 import { Current } from "src/auth/decorators/current.decorator";
 import { Host } from "src/auth/decorators/host.decorator";
 import { PayloadDto } from "src/auth/dto/payload.dto";
 import { Status } from "src/auth/enums/status.enums";
-import { AuthService, SESSION_COOKIE_NAME } from "./auth.service";
+import { JwtGuard } from "src/auth/guards/jwt.guard";
+import { SessionGuard } from "src/auth/guards/session.guard";
+import { AuthService } from "./auth.service";
 
 @Controller("auth")
 export class AuthController {
@@ -26,17 +27,18 @@ export class AuthController {
   ) {}
 
   @Get("profile")
-  @Auth()
+  @UseGuards(JwtGuard)
   getProfile(@Current() current) {
-    return { key: current.sub };
+    return current;
   }
 
   @Get("token")
+  @UseGuards(SessionGuard)
   async getToken(
-    @Cookies(SESSION_COOKIE_NAME) session: string,
+    @Current() current,
     @Res({ passthrough: true }) response: Response
   ) {
-    return this.authService.getToken(session, response);
+    return this.authService.getToken(current, response);
   }
 
   @Get("callback")
@@ -54,7 +56,7 @@ export class AuthController {
   }
 
   @Get("lnurl")
-  async secret(
+  async getLnurl(
     @Host() host: string,
     @Res({ passthrough: true }) response: Response
   ) {

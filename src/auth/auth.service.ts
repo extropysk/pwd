@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { JwtService } from "@nestjs/jwt";
@@ -6,14 +6,15 @@ import { randomBytes } from "crypto";
 import { Response } from "express";
 import * as lnurl from "lnurl";
 import { PayloadDto } from "src/auth/dto/payload.dto";
+import { JWT_COOKIE_NAME } from "src/auth/guards/jwt.guard";
+import {
+  SESSION_COOKIE_NAME,
+  SESSION_PREFIX,
+} from "src/auth/guards/session.guard";
 import { Payload } from "src/auth/interfaces/payload.interface";
 import { Token } from "src/auth/interfaces/token.interface";
 import { StorageService } from "src/storage/storage.service";
 import { expToDate } from "src/utils/date-utils";
-
-export const SESSION_COOKIE_NAME = "session";
-export const JWT_COOKIE_NAME = "jwt";
-export const SESSION_PREFIX = "session";
 
 @Injectable()
 export class AuthService {
@@ -24,18 +25,7 @@ export class AuthService {
     private storageService: StorageService
   ) {}
 
-  async getToken(k1: string, response: Response) {
-    if (!k1) {
-      throw new UnauthorizedException();
-    }
-
-    const payload = await this.storageService.get<Payload>(
-      `${SESSION_PREFIX}/${k1}`
-    );
-    if (!payload?.sub) {
-      throw new UnauthorizedException();
-    }
-
+  async getToken(payload: Payload, response: Response) {
     const jwt = await this.jwtService.signAsync(payload);
     response.cookie(JWT_COOKIE_NAME, jwt, {
       httpOnly: true,

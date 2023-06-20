@@ -11,7 +11,7 @@ import { Request } from "express";
 export const JWT_COOKIE_NAME = "jwt";
 
 @Injectable()
-export class AuthGuard implements CanActivate {
+export class JwtGuard implements CanActivate {
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService
