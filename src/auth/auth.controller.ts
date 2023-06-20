@@ -1,21 +1,21 @@
 import { Controller, Get, Query, Res } from "@nestjs/common";
 import { Response } from "express";
+import { Auth } from "src/auth/decorators/auth.decorator";
 import { Current } from "src/auth/decorators/current.decorator";
 import { Host } from "src/auth/decorators/host.decorator";
 import { Status } from "src/auth/enums/status.enums";
 import { AuthService } from "./auth.service";
-import { Public } from "./decorators/public.decorator";
 
 @Controller("auth")
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Get("profile")
+  @Auth()
   getProfile(@Current() current) {
     return { key: current.sub };
   }
 
-  @Public()
   @Get("verify")
   async verify(
     @Query("k1") k1: string,
@@ -31,7 +31,6 @@ export class AuthController {
     }
   }
 
-  @Public()
   @Get("secret")
   async secret(
     @Host() host: string,

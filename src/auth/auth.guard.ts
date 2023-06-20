@@ -5,30 +5,19 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { Reflector } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
 import { Request } from "express";
-import { JWT_COOKIE_NAME } from "src/auth/auth.service";
-import { IS_PUBLIC_KEY } from "./decorators/public.decorator";
+
+export const JWT_COOKIE_NAME = "jwt";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private jwtService: JwtService,
-    private reflector: Reflector,
     private configService: ConfigService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    if (isPublic) {
-      // 💡 See this condition
-      return true;
-    }
-
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromCookie(request);
     if (!token) {
