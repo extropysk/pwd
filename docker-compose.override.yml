@@ -1,0 +1,8 @@
+version: "3.8"
+
+services:
+  passwordless:
+    image: passwordless
+    build:
+      context: .
+      dockerfile: ./Dockerfile

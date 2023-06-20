@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  passwordless:
+    image: extropysk/passwordless:latest
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+    restart: unless-stopped
+    depends_on:
+      - redis
+    networks:
+      - default
+
+  redis:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - default
+    command: redis-server --requirepass ""
