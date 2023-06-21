@@ -1,6 +1,7 @@
 import { ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import * as cookieParser from "cookie-parser";
 import { AppModule } from "./app.module";
 
@@ -11,6 +12,14 @@ async function bootstrap() {
   app.enableCors({ credentials: true, origin: true });
   app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe());
+
+  const config = new DocumentBuilder()
+    .setTitle("Passwordless")
+    .setDescription("Passwordless API")
+    .setVersion(process.env.npm_package_version)
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup("api", app, document);
 
   await app.listen(configService.get<number>("PORT"));
 }

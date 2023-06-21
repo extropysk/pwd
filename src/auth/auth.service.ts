@@ -11,6 +11,7 @@ import {
   SESSION_COOKIE_NAME,
   SESSION_PREFIX,
 } from "src/auth/guards/session.guard";
+import { Challenge } from "src/auth/interfaces/challenge.interface";
 import { Payload } from "src/auth/interfaces/payload.interface";
 import { Token } from "src/auth/interfaces/token.interface";
 import { StorageService } from "src/storage/storage.service";
@@ -25,7 +26,7 @@ export class AuthService {
     private storageService: StorageService
   ) {}
 
-  async getToken(payload: Payload, response: Response) {
+  async getToken(payload: Payload, response: Response): Promise<Token> {
     const jwt = await this.jwtService.signAsync(payload);
     response.cookie(JWT_COOKIE_NAME, jwt, {
       httpOnly: true,
@@ -34,8 +35,7 @@ export class AuthService {
       domain: this.configService.get<string>("COOKIES_DOMAIN"),
       expires: expToDate(this.configService.get<string>("JWT_EXPIRATION")),
     });
-    const token: Token = { ...payload, access_token: jwt };
-    return token;
+    return { ...payload, access_token: jwt };
   }
 
   async callback(k1: string, sig: string, key: string) {
@@ -53,7 +53,7 @@ export class AuthService {
     this.eventEmitter.emit(k1, new PayloadDto(payload));
   }
 
-  async getLnurl(host: string, response: Response) {
+  async getChallenge(host: string, response: Response): Promise<Challenge> {
     const k1 = randomBytes(32).toString("hex");
 
     const params = new URLSearchParams({
