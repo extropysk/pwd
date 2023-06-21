@@ -27,7 +27,10 @@ export class AuthService {
   ) {}
 
   async getToken(payload: Payload, response: Response): Promise<Token> {
-    const jwt = await this.jwtService.signAsync(payload);
+    const jwt = await this.jwtService.signAsync(payload, {
+      secret: this.configService.get<string>("JWT_SECRET"),
+      expiresIn: this.configService.get<string>("JWT_EXPIRATION"),
+    });
     response.cookie(JWT_COOKIE_NAME, jwt, {
       httpOnly: true,
       secure: true,
