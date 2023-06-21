@@ -13,7 +13,6 @@ import { ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import { Response } from "express";
 import { Observable, fromEvent, map } from "rxjs";
 import { Current } from "src/auth/decorators/current.decorator";
-import { Host } from "src/auth/decorators/host.decorator";
 import { CallbackDto } from "src/auth/dto/callback.dto";
 import { ChallengeDto } from "src/auth/dto/challenge.dto";
 import { PayloadDto } from "src/auth/dto/payload.dto";
@@ -65,11 +64,8 @@ export class AuthController {
 
   @ApiOkResponse({ type: ChallengeDto })
   @Get("challenge")
-  async getChallenge(
-    @Host() host: string,
-    @Res({ passthrough: true }) response: Response
-  ) {
-    return await this.authService.getChallenge(host, response);
+  async getChallenge(@Res({ passthrough: true }) response: Response) {
+    return await this.authService.getChallenge(response);
   }
 
   @ApiOkResponse({ type: PayloadDto })

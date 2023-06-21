@@ -53,14 +53,15 @@ export class AuthService {
     this.eventEmitter.emit(k1, new PayloadDto(payload));
   }
 
-  async getChallenge(host: string, response: Response): Promise<Challenge> {
+  async getChallenge(response: Response): Promise<Challenge> {
     const k1 = randomBytes(32).toString("hex");
 
     const params = new URLSearchParams({
       k1,
       tag: "login",
     });
-    const callbackUrl = `${host}/auth/callback?${params.toString()}`;
+    const appUrl = this.configService.get<string>("APP_URL");
+    const callbackUrl = `${appUrl}/auth/callback?${params.toString()}`;
 
     await this.storageService.set(`${SESSION_PREFIX}/${k1}`, {}, "10m");
     response.cookie(SESSION_COOKIE_NAME, k1, {
