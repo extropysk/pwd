@@ -15,6 +15,7 @@ import { Observable, fromEvent, map } from "rxjs";
 import { Current } from "src/auth/decorators/current.decorator";
 import { CallbackDto } from "src/auth/dto/callback.dto";
 import { ChallengeDto } from "src/auth/dto/challenge.dto";
+import { IssuerDto } from "src/auth/dto/issuer.dto";
 import { PayloadDto } from "src/auth/dto/payload.dto";
 import { TokenDto } from "src/auth/dto/token.dto";
 import { Status } from "src/auth/enums/status.enums";
@@ -66,5 +67,11 @@ export class AuthController {
     return fromEvent(this.eventEmitter, id).pipe(
       map((data: CallbackDto) => ({ data }))
     );
+  }
+
+  @ApiOkResponse({ type: IssuerDto })
+  @Get("issuer")
+  async getIssuer() {
+    return await this.authService.getIssuer();
   }
 }

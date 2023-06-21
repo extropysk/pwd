@@ -13,6 +13,7 @@ import {
   SESSION_PREFIX,
 } from "src/auth/guards/session.guard";
 import { Challenge } from "src/auth/interfaces/challenge.interface";
+import { Issuer } from "src/auth/interfaces/issuer.interface";
 import { Payload } from "src/auth/interfaces/payload.interface";
 import { Token } from "src/auth/interfaces/token.interface";
 import { StorageService } from "src/storage/storage.service";
@@ -77,5 +78,10 @@ export class AuthService {
       expires: expToDate(this.configService.get<string>("SESSION_EXPIRATION")),
     });
     return { k1, lnurl: lnurl.encode(callbackUrl).toUpperCase() };
+  }
+
+  getIssuer(): Issuer {
+    const jwtKey = this.configService.get<string>("JWT_PUBLIC_KEY");
+    return { jwtKey };
   }
 }
