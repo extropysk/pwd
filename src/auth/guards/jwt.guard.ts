@@ -19,13 +19,15 @@ export class JwtGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromCookie(request);
+    const token =
+      this.extractTokenFromCookie(request) ||
+      this.extractTokenFromHeader(request);
     if (!token) {
       throw new UnauthorizedException();
     }
     try {
       const payload = await this.jwtService.verifyAsync(token, {
-        secret: this.configService.get<string>("JWT_SECRET"),
+        publicKey: this.configService.get<string>("JWT_PUBLIC_KEY"),
       });
       // 💡 We're assigning the payload to the request object here
       // so that we can access it in our route handlers

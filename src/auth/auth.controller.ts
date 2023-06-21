@@ -64,7 +64,7 @@ export class AuthController {
   @Sse("sse/:id")
   sse(@Param("id") id: string): Observable<MessageEvent> {
     return fromEvent(this.eventEmitter, id).pipe(
-      map((data: PayloadDto) => ({ data }))
+      map((data: CallbackDto) => ({ data }))
     );
   }
 }

@@ -5,7 +5,8 @@ import { JwtService } from "@nestjs/jwt";
 import { randomBytes } from "crypto";
 import { Response } from "express";
 import * as lnurl from "lnurl";
-import { PayloadDto } from "src/auth/dto/payload.dto";
+import { CallbackDto } from "src/auth/dto/callback.dto";
+import { Status } from "src/auth/enums/status.enums";
 import { JWT_COOKIE_NAME } from "src/auth/guards/jwt.guard";
 import {
   SESSION_COOKIE_NAME,
@@ -28,8 +29,9 @@ export class AuthService {
 
   async getToken(payload: Payload, response: Response): Promise<Token> {
     const jwt = await this.jwtService.signAsync(payload, {
-      secret: this.configService.get<string>("JWT_SECRET"),
       expiresIn: this.configService.get<string>("JWT_EXPIRATION"),
+      privateKey: this.configService.get<string>("JWT_PRIVATE_KEY"),
+      algorithm: "ES256",
     });
     response.cookie(JWT_COOKIE_NAME, jwt, {
       httpOnly: true,
@@ -53,7 +55,7 @@ export class AuthService {
 
     const payload: Payload = { sub: key };
     await this.storageService.set(`${SESSION_PREFIX}/${k1}`, payload);
-    this.eventEmitter.emit(k1, new PayloadDto(payload));
+    this.eventEmitter.emit(k1, new CallbackDto(Status.Ok));
   }
 
   async getChallenge(response: Response): Promise<Challenge> {
