@@ -18,7 +18,6 @@ import { ChallengeDto } from "src/auth/dto/challenge.dto";
 import { PayloadDto } from "src/auth/dto/payload.dto";
 import { TokenDto } from "src/auth/dto/token.dto";
 import { Status } from "src/auth/enums/status.enums";
-import { JwtGuard } from "src/auth/guards/jwt.guard";
 import { SessionGuard } from "src/auth/guards/session.guard";
 import { AuthService } from "./auth.service";
 
@@ -29,13 +28,6 @@ export class AuthController {
     private authService: AuthService,
     private eventEmitter: EventEmitter2
   ) {}
-
-  @ApiOkResponse({ type: PayloadDto })
-  @Get("profile")
-  @UseGuards(JwtGuard)
-  getProfile(@Current() current) {
-    return current;
-  }
 
   @ApiOkResponse({ type: TokenDto })
   @Get("token")

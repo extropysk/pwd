@@ -1,10 +1,11 @@
-import { Module } from "@nestjs/common";
+import { Global, Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { JwtModule } from "@nestjs/jwt";
+import { JwtModule, JwtService } from "@nestjs/jwt";
 import { StorageModule } from "src/storage/storage.module";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 
+@Global()
 @Module({
   imports: [
     StorageModule,
@@ -17,8 +18,8 @@ import { AuthService } from "./auth.service";
       inject: [ConfigService],
     }),
   ],
-  providers: [AuthService],
+  providers: [AuthService, JwtService],
   controllers: [AuthController],
-  exports: [AuthService],
+  exports: [AuthService, JwtService],
 })
 export class AuthModule {}
