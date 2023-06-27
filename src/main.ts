@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import * as cookieParser from "cookie-parser";
+import { SESSION_COOKIE_NAME } from "src/auth/guards/session.guard";
 import { AppModule } from "./app.module";
 
 async function bootstrap() {
@@ -17,9 +18,11 @@ async function bootstrap() {
     .setTitle("Passwordless")
     .setDescription("Passwordless API")
     .setVersion(process.env.npm_package_version)
+    .addCookieAuth(SESSION_COOKIE_NAME)
     .build();
+
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup("api", app, document);
+  SwaggerModule.setup("docs", app, document);
 
   await app.listen(configService.get<number>("PORT"));
 }

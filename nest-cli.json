@@ -2,13 +2,15 @@
   "language": "ts",
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
-  "plugins": [
-    {
-      "name": "@nestjs/swagger",
-      "options": {
-        "classValidatorShim": false,
-        "introspectComments": true
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "@nestjs/swagger",
+        "options": {
+          "classValidatorShim": true,
+          "introspectComments": true
+        }
       }
-    }
-  ]
+    ]
+  }
 }

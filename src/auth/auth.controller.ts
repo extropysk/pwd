@@ -6,20 +6,19 @@ import {
   Query,
   Res,
   Sse,
-  UseGuards,
 } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import { ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Response } from "express";
 import { Observable, fromEvent, map } from "rxjs";
 import { Current } from "src/auth/decorators/current.decorator";
+import { Session } from "src/auth/decorators/session.decorator";
 import { CallbackDto } from "src/auth/dto/callback.dto";
 import { ChallengeDto } from "src/auth/dto/challenge.dto";
 import { IssuerDto } from "src/auth/dto/issuer.dto";
 import { PayloadDto } from "src/auth/dto/payload.dto";
 import { TokenDto } from "src/auth/dto/token.dto";
 import { Status } from "src/auth/enums/status.enums";
-import { SessionGuard } from "src/auth/guards/session.guard";
 import { AuthService } from "./auth.service";
 
 @ApiTags("auth")
@@ -30,9 +29,10 @@ export class AuthController {
     private eventEmitter: EventEmitter2
   ) {}
 
+  @ApiOperation({ summary: "Get JWT token" })
   @ApiOkResponse({ type: TokenDto })
   @Get("token")
-  @UseGuards(SessionGuard)
+  @Session()
   async getToken(
     @Current() current,
     @Res({ passthrough: true }) response: Response
@@ -40,6 +40,7 @@ export class AuthController {
     return this.authService.getToken(current, response);
   }
 
+  @ApiOperation({ summary: "LN wallet callback" })
   @ApiOkResponse({ type: CallbackDto })
   @Get("callback")
   async callback(
@@ -55,12 +56,18 @@ export class AuthController {
     }
   }
 
+  @ApiOperation({ summary: "Get challenge" })
   @ApiOkResponse({ type: ChallengeDto })
   @Get("challenge")
   async getChallenge(@Res({ passthrough: true }) response: Response) {
     return await this.authService.getChallenge(response);
   }
 
+  @ApiOperation({
+    summary: "SSE",
+    description:
+      "SEE called when user is logged in. ID is k1 returned from challenge.",
+  })
   @ApiOkResponse({ type: PayloadDto })
   @Sse("sse/:id")
   sse(@Param("id") id: string): Observable<MessageEvent> {
@@ -69,7 +76,11 @@ export class AuthController {
     );
   }
 
-  @ApiOkResponse({ type: IssuerDto })
+  @ApiOperation({
+    summary: "Get issuer",
+    description: "Get public key, that can be used for JWT token verification.",
+  })
+  @ApiOkResponse({ type: IssuerDto, description: "Public key" })
   @Get("issuer")
   async getIssuer() {
     return await this.authService.getIssuer();
