@@ -12,11 +12,10 @@ async function bootstrap() {
 
   app.enableCors({ credentials: true, origin: true })
   app.use(cookieParser())
-  app.useGlobalPipes(new ValidationPipe())
+  app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }))
 
   const config = new DocumentBuilder()
-    .setTitle('Passwordless')
-    .setDescription('Passwordless API')
+    .setTitle(process.env.npm_package_name)
     .setVersion(process.env.npm_package_version)
     .addCookieAuth(JWT_COOKIE_NAME)
     .build()
@@ -24,6 +23,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config)
   SwaggerModule.setup('docs', app, document)
 
-  await app.listen(configService.get<number>('PORT'))
+  await app.listen(configService.get<number>('PORT', 3000))
 }
 bootstrap()
