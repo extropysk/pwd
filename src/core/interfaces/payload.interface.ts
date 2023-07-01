@@ -1,3 +1,4 @@
 export interface Payload {
-  sub: string;
+  sub: string
+  roles: string[]
 }
