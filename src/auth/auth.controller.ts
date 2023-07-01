@@ -29,13 +29,6 @@ export class AuthController {
     return this.authService.getToken(current, response)
   }
 
-  @ApiOperation({ summary: 'Get JWT token' })
-  @ApiOkResponse({ type: TokenDto })
-  @Get('t')
-  async fakeToken(@Res({ passthrough: true }) response: Response) {
-    return this.authService.getToken({ sub: '0', roles: [] }, response)
-  }
-
   @Post('/logout')
   @ApiOperation({ summary: 'Logout' })
   @ApiOkResponse({ type: EmptyDto })

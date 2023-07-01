@@ -1,6 +1,6 @@
 {
   "name": "passwordless",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "",
   "author": "",
   "license": "MIT",
@@ -25,7 +25,6 @@
     "@nestjs/core": "9.4.3",
     "@nestjs/event-emitter": "^2.0.0",
     "@nestjs/jwt": "10.0.3",
-    "@nestjs/passport": "9.0.3",
     "@nestjs/platform-express": "9.4.3",
     "@nestjs/swagger": "^7.0.3",
     "class-transformer": "^0.5.1",
