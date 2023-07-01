@@ -7,13 +7,13 @@ import { Session } from 'src/auth/decorators/session.decorator'
 import { CallbackDto } from 'src/auth/dto/callback.dto'
 import { ChallengeDto } from 'src/auth/dto/challenge.dto'
 import { IssuerDto } from 'src/auth/dto/issuer.dto'
-import { PayloadDto } from 'src/core/dto/payload.dto'
 import { TokenDto } from 'src/auth/dto/token.dto'
 import { Status } from 'src/auth/enums/status.enums'
 import { SESSION_COOKIE_NAME } from 'src/auth/guards/session.guard'
 import { Cookies } from 'src/core/decorators/cookies.decorator'
 import { Current } from 'src/core/decorators/current.decorator'
 import { EmptyDto } from 'src/core/dto/empty.dto'
+import { PayloadDto } from 'src/core/dto/payload.dto'
 import { AuthService } from './auth.service'
 
 @ApiTags('auth')
@@ -27,6 +27,13 @@ export class AuthController {
   @Session()
   async getToken(@Current() current, @Res({ passthrough: true }) response: Response) {
     return this.authService.getToken(current, response)
+  }
+
+  @ApiOperation({ summary: 'Get JWT token' })
+  @ApiOkResponse({ type: TokenDto })
+  @Get('t')
+  async fakeToken(@Res({ passthrough: true }) response: Response) {
+    return this.authService.getToken({ sub: '0', roles: [] }, response)
   }
 
   @Post('/logout')

@@ -1,5 +1,6 @@
-import { User } from "src/users/interfaces/user.interface";
+import { User } from 'src/users/interfaces/user.interface'
 
 export class UserDto implements User {
-  key: string;
+  key: string
+  roles: string[]
 }
