@@ -5,8 +5,6 @@ import { JwtService } from '@nestjs/jwt'
 import { Request } from 'express'
 import { ROLES_KEY } from 'src/core/decorators/jwt.decorator'
 
-export const JWT_COOKIE_NAME = 'jwt'
-
 @Injectable()
 export class JwtGuard implements CanActivate {
   constructor(
@@ -17,7 +15,7 @@ export class JwtGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest()
-    const token = this.extractTokenFromCookie(request) || this.extractTokenFromHeader(request)
+    const token = this.extractTokenFromHeader(request)
     if (!token) {
       throw new UnauthorizedException()
     }
@@ -42,10 +40,6 @@ export class JwtGuard implements CanActivate {
     }
 
     return true
-  }
-
-  private extractTokenFromCookie(request: Request): string | undefined {
-    return request.cookies?.[JWT_COOKIE_NAME]
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {

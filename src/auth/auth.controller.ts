@@ -7,12 +7,12 @@ import { Cookies } from 'src/auth/decorators/cookies.decorator'
 import { Session } from 'src/auth/decorators/session.decorator'
 import { CallbackDto } from 'src/auth/dto/callback.dto'
 import { ChallengeDto } from 'src/auth/dto/challenge.dto'
+import { EmptyDto } from 'src/auth/dto/empty.dto'
 import { IssuerDto } from 'src/auth/dto/issuer.dto'
 import { TokenDto } from 'src/auth/dto/token.dto'
 import { Status } from 'src/auth/enums/status.enums'
 import { SESSION_COOKIE_NAME } from 'src/auth/guards/session.guard'
 import { Current } from 'src/core/decorators/current.decorator'
-import { EmptyDto } from 'src/auth/dto/empty.dto'
 import { PayloadDto } from 'src/core/dto/payload.dto'
 import { AuthService } from './auth.service'
 
@@ -25,8 +25,8 @@ export class AuthController {
   @ApiOkResponse({ type: TokenDto })
   @Get('token')
   @Session()
-  async getToken(@Current() current, @Res({ passthrough: true }) response: Response) {
-    return this.authService.getToken(current, response)
+  async getToken(@Current() current) {
+    return this.authService.getToken(current)
   }
 
   @Post('/logout')

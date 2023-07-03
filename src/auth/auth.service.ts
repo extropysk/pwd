@@ -12,9 +12,8 @@ import { SESSION_COOKIE_NAME, SESSION_PREFIX } from 'src/auth/guards/session.gua
 import { Challenge } from 'src/auth/interfaces/challenge.interface'
 import { Issuer } from 'src/auth/interfaces/issuer.interface'
 import { Token } from 'src/auth/interfaces/token.interface'
-import { JWT_COOKIE_NAME } from 'src/core/guards/jwt.guard'
-import { Payload } from 'src/core/interfaces/payload.interface'
 import { expToDate } from 'src/auth/utils/date-utils'
+import { Payload } from 'src/core/interfaces/payload.interface'
 import { StorageService } from 'src/storage/storage.service'
 
 @Injectable()
@@ -35,23 +34,13 @@ export class AuthService {
       domain,
       expires: new Date(),
     })
-    response.cookie(JWT_COOKIE_NAME, '', {
-      ...COOKIE_OPTIONS,
-      domain,
-      expires: new Date(),
-    })
   }
 
-  async getToken(payload: Payload, response: Response): Promise<Token> {
+  async getToken(payload: Payload): Promise<Token> {
     const jwt = await this.jwtService.signAsync(payload, {
       expiresIn: this.configService.get<string>('JWT_EXPIRATION'),
       privateKey: this.configService.get<string>('JWT_PRIVATE_KEY'),
       algorithm: 'ES256',
-    })
-    response.cookie(JWT_COOKIE_NAME, jwt, {
-      ...COOKIE_OPTIONS,
-      domain: this.configService.get<string>('COOKIES_DOMAIN'),
-      expires: expToDate(this.configService.get<string>('JWT_EXPIRATION')),
     })
     return { ...payload, access_token: jwt }
   }
