@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config'
 import { Reflector } from '@nestjs/core'
 import { JwtService } from '@nestjs/jwt'
 import { Request } from 'express'
-import { ROLES_KEY } from 'src/core/decorators/jwt.decorator'
 
 @Injectable()
 export class JwtGuard implements CanActivate {
@@ -29,14 +28,6 @@ export class JwtGuard implements CanActivate {
       request['user'] = payload
     } catch {
       throw new UnauthorizedException()
-    }
-
-    const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ])
-    if (requiredRoles?.length > 0) {
-      return requiredRoles.some((role) => request['user'].roles?.includes(role))
     }
 
     return true
