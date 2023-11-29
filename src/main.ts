@@ -15,7 +15,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle(configService.get<string>('APP_NAME'))
-    .setVersion(configService.get<string>('APP_VERSION'))
+    .setVersion(configService.get<string>('APP_VERSION')?.substring(0, 7))
     .addBearerAuth()
     .build()
 
