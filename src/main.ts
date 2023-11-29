@@ -14,8 +14,8 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }))
 
   const config = new DocumentBuilder()
-    .setTitle(process.env.npm_package_name)
-    .setVersion(process.env.npm_package_version)
+    .setTitle(configService.get<string>('APP_NAME'))
+    .setVersion(configService.get<string>('APP_VERSION'))
     .addBearerAuth()
     .build()
 
