@@ -4,6 +4,9 @@ on:
   push:
     branches: ['main']
 
+env:
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
   release:
     name: Push Docker image to Docker Hub
@@ -23,7 +26,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: extropysk/passwordless
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -39,7 +42,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=extropysk/passwordless:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
           cache-to: type=inline
           build-args: |
             VERSION=${{ github.sha }}
