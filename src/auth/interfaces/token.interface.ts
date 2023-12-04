@@ -1,4 +1,5 @@
-export interface Token {
-  sub: string;
-  access_token: string;
+import { Payload } from 'src/core/interfaces/payload.interface'
+
+export interface Token extends Payload {
+  access_token: string
 }

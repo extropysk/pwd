@@ -1,32 +1,37 @@
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { JwtService } from '@nestjs/jwt'
 import { randomBytes } from 'crypto'
 import { Response } from 'express'
 import * as lnurl from 'lnurl'
+import { Db, Filter, ObjectId } from 'mongodb'
 import { COOKIE_OPTIONS } from 'src/auth/decorators/cookies.decorator'
 import { CallbackDto } from 'src/auth/dto/callback.dto'
 import { Status } from 'src/auth/enums/status.enums'
-import { SESSION_COOKIE_NAME, SESSION_PREFIX } from 'src/auth/guards/session.guard'
+import { SESSION_COOKIE_NAME } from 'src/auth/guards/session.guard'
 import { Challenge } from 'src/auth/interfaces/challenge.interface'
 import { Issuer } from 'src/auth/interfaces/issuer.interface'
+import { Session } from 'src/auth/interfaces/session.interface'
 import { Token } from 'src/auth/interfaces/token.interface'
 import { expToDate } from 'src/auth/utils/date-utils'
 import { Payload } from 'src/core/interfaces/payload.interface'
-import { StorageService } from 'src/storage/storage.service'
+import { DATABASE } from 'src/db/database.module'
+
+const COLLECTION = 'sessions'
 
 @Injectable()
 export class AuthService {
   constructor(
+    @Inject(DATABASE)
+    private db: Db,
     private jwtService: JwtService,
     private configService: ConfigService,
-    private eventEmitter: EventEmitter2,
-    private storageService: StorageService
+    private eventEmitter: EventEmitter2
   ) {}
 
-  async logout(k1: string, response: Response) {
-    await this.storageService.del(`${SESSION_PREFIX}/${k1}`)
+  async logout(session: string, response: Response) {
+    await this.db.collection<Session>(COLLECTION).deleteOne({ _id: new ObjectId(session) })
 
     const domain = this.configService.get<string>('COOKIES_DOMAIN')
     response.cookie(SESSION_COOKIE_NAME, '', {
@@ -45,8 +50,14 @@ export class AuthService {
     return { ...payload, access_token: jwt }
   }
 
+  async findOne(filter: Filter<Session>) {
+    return await this.db
+      .collection<Session>(COLLECTION)
+      .findOne({ $and: [filter, { expired: { $gt: new Date() } }] })
+  }
+
   async callback(k1: string, sig: string, key: string) {
-    const session = await this.storageService.get(`${SESSION_PREFIX}/${k1}`)
+    const session = await this.findOne({ k1 })
     if (!session) {
       throw new Error('Unauthorized')
     }
@@ -56,8 +67,16 @@ export class AuthService {
     }
 
     const payload: Payload = { sub: key, roles: [] }
-    await this.storageService.set(`${SESSION_PREFIX}/${k1}`, payload)
-    this.eventEmitter.emit(k1, new CallbackDto(Status.Ok))
+    await this.db.collection<Session>(COLLECTION).updateOne(
+      { _id: session._id },
+      {
+        $set: {
+          payload,
+          expired: expToDate(this.configService.get<string>('SESSION_EXPIRATION')),
+        },
+      }
+    )
+    this.eventEmitter.emit(session._id.toString(), new CallbackDto(Status.Ok))
   }
 
   async getChallenge(response: Response): Promise<Challenge> {
@@ -70,13 +89,18 @@ export class AuthService {
     const appUrl = this.configService.get<string>('APP_URL')
     const callbackUrl = `${appUrl}/auth/callback?${params.toString()}`
 
-    await this.storageService.set(`${SESSION_PREFIX}/${k1}`, {}, '10m')
-    response.cookie(SESSION_COOKIE_NAME, k1, {
+    const session: Session = {
+      k1,
+      expired: expToDate('10m'),
+    }
+    const { insertedId } = await this.db.collection<Session>(COLLECTION).insertOne(session)
+
+    response.cookie(SESSION_COOKIE_NAME, insertedId.toString(), {
       ...COOKIE_OPTIONS,
       domain: this.configService.get<string>('COOKIES_DOMAIN'),
       expires: expToDate(this.configService.get<string>('SESSION_EXPIRATION')),
     })
-    return { k1, lnurl: lnurl.encode(callbackUrl).toUpperCase() }
+    return { k1, lnurl: lnurl.encode(callbackUrl).toUpperCase(), id: insertedId.toString() }
   }
 
   getIssuer(): Issuer {
