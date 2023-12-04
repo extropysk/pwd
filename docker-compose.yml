@@ -1,4 +1,4 @@
-version: "3.8"
+version: '3.8'
 
 services:
   passwordless:
@@ -13,11 +13,18 @@ services:
     networks:
       - default
 
-  redis:
-    image: redis:6.2-alpine
+  mongo:
+    image: mongo:latest
     restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: pass
     ports:
-      - 6379:6379
-    command: redis-server --requirepass ""
+      - 27017:27017
+    volumes:
+      - mongo:/data/db
     networks:
       - default
+
+volumes:
+  mongo:
