@@ -1,8 +1,8 @@
 version: '3.8'
 
 services:
-  passwordless:
-    image: extropysk/passwordless:latest
+  pwd:
+    image: extropysk/pwd:latest
     ports:
       - 3000:3000
     env_file:
