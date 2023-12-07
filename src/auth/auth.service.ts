@@ -8,6 +8,7 @@ import * as lnurl from 'lnurl'
 import { Db, Filter, ObjectId } from 'mongodb'
 import { COOKIE_OPTIONS } from 'src/auth/decorators/cookies.decorator'
 import { CallbackDto } from 'src/auth/dto/callback.dto'
+import { LoginDto } from 'src/auth/dto/login.dto'
 import { Status } from 'src/auth/enums/status.enums'
 import { SESSION_COOKIE_NAME } from 'src/auth/guards/session.guard'
 import { Challenge } from 'src/auth/interfaces/challenge.interface'
@@ -66,7 +67,7 @@ export class AuthService {
       throw new Error('Signature verification failed')
     }
 
-    const payload: Payload = { sub: key, roles: [] }
+    const payload: Payload = { sub: key, permissions: [] }
     await this.db.collection<Session>(COLLECTION).updateOne(
       { _id: session._id },
       {
@@ -77,6 +78,26 @@ export class AuthService {
       }
     )
     this.eventEmitter.emit(session._id.toString(), new CallbackDto(Status.Ok))
+  }
+
+  async login(loginDto: LoginDto, response: Response): Promise<Token> {
+    const expired = expToDate(this.configService.get<string>('SESSION_EXPIRATION'))
+    const payload: Payload = {
+      sub: loginDto.email,
+      permissions: [],
+    }
+
+    const { insertedId } = await this.db.collection<Session>(COLLECTION).insertOne({
+      expired,
+      payload,
+    })
+
+    response.cookie(SESSION_COOKIE_NAME, insertedId.toString(), {
+      ...COOKIE_OPTIONS,
+      domain: this.configService.get<string>('COOKIES_DOMAIN'),
+      expires: expired,
+    })
+    return this.getToken(payload)
   }
 
   async getChallenge(response: Response): Promise<Challenge> {
