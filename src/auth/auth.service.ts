@@ -67,7 +67,7 @@ export class AuthService {
       throw new Error('Signature verification failed')
     }
 
-    const payload: Payload = { sub: key, permissions: [] }
+    const payload: Payload = { sub: key, permissions: {} }
     await this.db.collection<Session>(COLLECTION).updateOne(
       { _id: session._id },
       {
@@ -84,7 +84,7 @@ export class AuthService {
     const expired = expToDate(this.configService.get<string>('SESSION_EXPIRATION'))
     const payload: Payload = {
       sub: loginDto.email,
-      permissions: [],
+      permissions: {},
     }
 
     const { insertedId } = await this.db.collection<Session>(COLLECTION).insertOne({

@@ -1,7 +1,6 @@
 import { Token } from 'src/auth/interfaces/token.interface'
+import { PayloadDto } from 'src/core/dto/payload.dto'
 
-export class TokenDto implements Token {
-  permissions: string[]
-  sub: string
+export class TokenDto extends PayloadDto implements Token {
   access_token: string
 }
