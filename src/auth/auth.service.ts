@@ -1,7 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { JwtService } from '@nestjs/jwt'
+import * as bcrypt from 'bcrypt'
 import { randomBytes } from 'crypto'
 import { Response } from 'express'
 import * as lnurl from 'lnurl'
@@ -18,6 +19,8 @@ import { Token } from 'src/auth/interfaces/token.interface'
 import { expToDate } from 'src/auth/utils/date-utils'
 import { Payload } from 'src/core/interfaces/payload.interface'
 import { DATABASE } from 'src/db/database.module'
+import { Base, WithoutId } from 'src/db/interfaces/base.interface'
+import { UsersService } from 'src/users/users.service'
 
 const COLLECTION = 'sessions'
 
@@ -28,6 +31,7 @@ export class AuthService {
     private db: Db,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private usersService: UsersService,
     private eventEmitter: EventEmitter2
   ) {}
 
@@ -57,6 +61,13 @@ export class AuthService {
       .findOne({ $and: [filter, { expired: { $gt: new Date() } }] })
   }
 
+  async insert(session: WithoutId<Session>): Promise<Base> {
+    const { insertedId: _id } = await this.db
+      .collection<WithoutId<Session>>(COLLECTION)
+      .insertOne(session)
+    return { _id }
+  }
+
   async callback(k1: string, sig: string, key: string) {
     const session = await this.findOne({ k1 })
     if (!session) {
@@ -67,7 +78,12 @@ export class AuthService {
       throw new Error('Signature verification failed')
     }
 
-    const payload: Payload = { sub: key, permissions: {} }
+    let user = await this.usersService.findOne({ key })
+    if (!user) {
+      user = await this.usersService.insert({ key, permissions: {}, email: key })
+    }
+
+    const payload: Payload = { sub: user._id.toString(), permissions: user.permissions }
     await this.db.collection<Session>(COLLECTION).updateOne(
       { _id: session._id },
       {
@@ -81,18 +97,30 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto, response: Response): Promise<Token> {
-    const expired = expToDate(this.configService.get<string>('SESSION_EXPIRATION'))
-    const payload: Payload = {
-      sub: loginDto.email,
-      permissions: {},
+    let user = await this.usersService.findOne({ email: loginDto.email })
+    if (user) {
+      if (!(await bcrypt.compare(loginDto.password, user.password))) {
+        throw new UnauthorizedException()
+      }
+    } else {
+      user = await this.usersService.insert({
+        ...loginDto,
+        permissions: {},
+      })
     }
 
-    const { insertedId } = await this.db.collection<Session>(COLLECTION).insertOne({
+    const expired = expToDate(this.configService.get<string>('SESSION_EXPIRATION'))
+    const payload: Payload = {
+      sub: user._id.toString(),
+      permissions: user.permissions,
+    }
+
+    const session = {
       expired,
       payload,
-    })
-
-    response.cookie(SESSION_COOKIE_NAME, insertedId.toString(), {
+    }
+    const { _id } = await this.insert(session)
+    response.cookie(SESSION_COOKIE_NAME, _id.toString(), {
       ...COOKIE_OPTIONS,
       domain: this.configService.get<string>('COOKIES_DOMAIN'),
       expires: expired,
@@ -110,18 +138,16 @@ export class AuthService {
     const appUrl = this.configService.get<string>('APP_URL')
     const callbackUrl = `${appUrl}/auth/callback?${params.toString()}`
 
-    const session: Session = {
+    const { _id } = await this.insert({
       k1,
       expired: expToDate('10m'),
-    }
-    const { insertedId } = await this.db.collection<Session>(COLLECTION).insertOne(session)
-
-    response.cookie(SESSION_COOKIE_NAME, insertedId.toString(), {
+    })
+    response.cookie(SESSION_COOKIE_NAME, _id.toString(), {
       ...COOKIE_OPTIONS,
       domain: this.configService.get<string>('COOKIES_DOMAIN'),
       expires: expToDate(this.configService.get<string>('SESSION_EXPIRATION')),
     })
-    return { k1, lnurl: lnurl.encode(callbackUrl).toUpperCase(), id: insertedId.toString() }
+    return { k1, lnurl: lnurl.encode(callbackUrl).toUpperCase(), id: _id.toString() }
   }
 
   getIssuer(): Issuer {
