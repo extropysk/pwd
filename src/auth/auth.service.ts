@@ -78,9 +78,13 @@ export class AuthService {
       throw new Error('Signature verification failed')
     }
 
-    let user = await this.usersService.findOne({ key })
+    let user = await this.usersService.findOne({ 'ln.id': key })
     if (!user) {
-      user = await this.usersService.insert({ key, permissions: {}, email: key })
+      user = await this.usersService.insert({
+        ln: { id: key },
+        permissions: {},
+        email: `${key}`,
+      })
     }
 
     const payload: Payload = { sub: user._id.toString(), permissions: user.permissions }
