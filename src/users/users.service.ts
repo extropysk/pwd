@@ -1,6 +1,7 @@
 import { Inject } from '@nestjs/common'
 import * as bcrypt from 'bcrypt'
 import { Db, Filter, ObjectId } from 'mongodb'
+import { Permission } from 'src/core/enums/permission.enum'
 import { Payload } from 'src/core/interfaces/payload.interface'
 import { DATABASE } from 'src/db/database.module'
 import { Projection, WithoutId } from 'src/db/interfaces/base.interface'
@@ -20,6 +21,12 @@ export class UsersService {
 
   async findOne(filter: Filter<User>, projection?: Projection<User>): Promise<User> {
     return await this.db.collection<User>(COLLECTION).findOne(filter, { projection })
+  }
+
+  async updatePermissions(id: ObjectId, permissions: Record<string, Permission>) {
+    return await this.db
+      .collection<User>(COLLECTION)
+      .updateOne({ _id: id }, { $set: { permissions } })
   }
 
   async insert(user: WithoutId<User>): Promise<User> {

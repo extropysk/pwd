@@ -1,13 +1,19 @@
-import { Controller, Get } from '@nestjs/common'
+import { Body, Controller, Get, NotFoundException, Param, Put } from '@nestjs/common'
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { Auth } from 'src/core/decorators/auth.decorator'
 import { Current } from 'src/core/decorators/current.decorator'
+import { Permission } from 'src/core/enums/permission.enum'
 import { Payload } from 'src/core/interfaces/payload.interface'
+import { IdDto } from 'src/db/dto/id.dto'
+import { UpdateResultDto } from 'src/db/dto/update-result.dto'
+import { UpdatePermissionsDto } from 'src/users/dto/update-permissions.dto'
 import { UserDto } from 'src/users/dto/user.dto'
 import { UsersService } from 'src/users/users.service'
 
-@ApiTags('users')
-@Controller('users')
+const MODULE = 'users'
+
+@ApiTags(MODULE)
+@Controller(MODULE)
 @Auth()
 export class UsersController {
   constructor(private usersService: UsersService) {}
@@ -15,7 +21,26 @@ export class UsersController {
   @ApiOperation({ summary: 'Get current user' })
   @ApiOkResponse({ type: UserDto })
   @Get('current')
-  getProfile(@Current() current: Payload) {
-    return this.usersService.getCurrentUser(current)
+  async getProfile(@Current() current: Payload) {
+    return await this.usersService.getCurrentUser(current)
+  }
+
+  @ApiOperation({ summary: 'Get user' })
+  @ApiOkResponse({ type: UserDto })
+  @Get(':id')
+  @Auth(MODULE, Permission.READ)
+  async findOne(@Param() { id }: IdDto) {
+    const user = await this.usersService.findOne({ _id: id }, { password: 0 })
+    if (!user) {
+      throw new NotFoundException()
+    }
+    return user
+  }
+
+  @ApiOkResponse({ type: UpdateResultDto })
+  @Auth(MODULE, Permission.UPDATE)
+  @Put(':id')
+  async updatePermissions(@Param() { id }: IdDto, @Body() { permissions }: UpdatePermissionsDto) {
+    return await this.usersService.updatePermissions(id, permissions)
   }
 }
