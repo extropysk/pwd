@@ -24,9 +24,12 @@ export class UsersService {
   }
 
   async updatePermissions(id: ObjectId, permissions: Record<string, Permission>) {
-    return await this.db
-      .collection<User>(COLLECTION)
-      .updateOne({ _id: id }, { $set: { permissions } })
+    const user = {}
+    Object.keys(permissions).forEach((key) => {
+      user[`permissions.${key}`] = permissions[key]
+    })
+
+    return await this.db.collection<User>(COLLECTION).updateOne({ _id: id }, { $set: user })
   }
 
   async insert(user: WithoutId<User>): Promise<User> {
