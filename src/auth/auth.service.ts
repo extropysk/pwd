@@ -110,7 +110,6 @@ export class AuthService {
       payload,
     })
     this.setCookie(response, _id.toString(), expired)
-    return this.getToken(payload)
   }
 
   async login(loginDto: LoginDto, response: Response): Promise<Token> {
@@ -127,7 +126,8 @@ export class AuthService {
       sub: user._id.toString(),
       permissions: user.permissions ?? {},
     }
-    return await this.createSession(payload, response)
+    await this.createSession(payload, response)
+    return await this.getToken(payload)
   }
 
   async getChallenge(response: Response): Promise<Challenge> {

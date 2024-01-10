@@ -16,6 +16,7 @@ import { Response } from 'express'
 import { Observable, fromEvent, map } from 'rxjs'
 import { Cookies } from 'src/auth/decorators/cookies.decorator'
 import { Session } from 'src/auth/decorators/session.decorator'
+import { AuthState, State } from 'src/auth/decorators/state.decorator'
 import { CallbackDto } from 'src/auth/dto/callback.dto'
 import { ChallengeDto } from 'src/auth/dto/challenge.dto'
 import { EmptyDto } from 'src/auth/dto/empty.dto'
@@ -27,6 +28,7 @@ import { GoogleAuthGuard } from 'src/auth/guards/google.guard'
 import { SESSION_COOKIE_NAME } from 'src/auth/guards/session.guard'
 import { Current } from 'src/core/decorators/current.decorator'
 import { PayloadDto } from 'src/core/dto/payload.dto'
+import { Payload } from 'src/core/interfaces/payload.interface'
 import { AuthService } from './auth.service'
 
 @ApiTags('auth')
@@ -102,7 +104,16 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(GoogleAuthGuard)
-  async googleAuth(@Res({ passthrough: true }) response: Response, @Current() current) {
-    return await this.authService.createSession(current, response)
+  async googleAuth(
+    @Res({ passthrough: true }) response: Response,
+    @Current() current: Payload,
+    @State() state: AuthState
+  ) {
+    await this.authService.createSession(current, response)
+    if (state.callback) {
+      return response.redirect(state.callback)
+    }
+
+    return current
   }
 }
