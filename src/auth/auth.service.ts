@@ -72,7 +72,7 @@ export class AuthService {
   }
 
   async callback(k1: string, sig: string, key: string) {
-    const session = await this.findOne({ k1 })
+    const session = await this.findOne({ challenge: k1 })
     if (!session) {
       throw new Error('Unauthorized')
     }
@@ -141,7 +141,7 @@ export class AuthService {
     const callbackUrl = `${appUrl}/auth/callback?${params.toString()}`
 
     const { _id } = await this.insert({
-      k1,
+      challenge: k1,
       expired: expToDate('10m'),
     })
 
