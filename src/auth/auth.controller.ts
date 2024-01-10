@@ -1,4 +1,15 @@
-import { Body, Controller, Get, MessageEvent, Param, Post, Query, Res, Sse } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Get,
+  MessageEvent,
+  Param,
+  Post,
+  Query,
+  Res,
+  Sse,
+  UseGuards,
+} from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { Response } from 'express'
@@ -12,6 +23,7 @@ import { IssuerDto } from 'src/auth/dto/issuer.dto'
 import { LoginDto } from 'src/auth/dto/login.dto'
 import { TokenDto } from 'src/auth/dto/token.dto'
 import { Status } from 'src/auth/enums/status.enums'
+import { GoogleAuthGuard } from 'src/auth/guards/google.guard'
 import { SESSION_COOKIE_NAME } from 'src/auth/guards/session.guard'
 import { Current } from 'src/core/decorators/current.decorator'
 import { PayloadDto } from 'src/core/dto/payload.dto'
@@ -70,7 +82,7 @@ export class AuthController {
 
   @ApiOperation({
     summary: 'SSE',
-    description: 'SEE called when user is logged in. ID is k1 returned from challenge.',
+    description: 'SEE called when user is logged in.',
   })
   @ApiOkResponse({ type: PayloadDto })
   @Sse('sse/:id')
@@ -86,5 +98,11 @@ export class AuthController {
   @Get('issuer')
   async getIssuer() {
     return await this.authService.getIssuer()
+  }
+
+  @Get('google')
+  @UseGuards(GoogleAuthGuard)
+  async googleAuth(@Res({ passthrough: true }) response: Response, @Current() current) {
+    return await this.authService.createSession(current, response)
   }
 }

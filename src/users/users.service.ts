@@ -42,4 +42,14 @@ export class UsersService {
       .insertOne(user)
     return { ...user, _id, password: undefined }
   }
+
+  async upsert(user: WithoutId<User>): Promise<User> {
+    return await this.db
+      .collection<User>(COLLECTION)
+      .findOneAndUpdate(
+        { email: user.email },
+        { $set: user },
+        { upsert: true, returnDocument: 'after' }
+      )
+  }
 }

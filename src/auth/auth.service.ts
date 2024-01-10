@@ -7,7 +7,6 @@ import { randomBytes } from 'crypto'
 import { Response } from 'express'
 import * as lnurl from 'lnurl'
 import { Db, Filter, ObjectId } from 'mongodb'
-import { COOKIE_OPTIONS } from 'src/auth/decorators/cookies.decorator'
 import { CallbackDto } from 'src/auth/dto/callback.dto'
 import { LoginDto } from 'src/auth/dto/login.dto'
 import { Status } from 'src/auth/enums/status.enums'
@@ -35,15 +34,19 @@ export class AuthService {
     private eventEmitter: EventEmitter2
   ) {}
 
+  async setCookie(response: Response, value: string, expires: Date) {
+    response.cookie(SESSION_COOKIE_NAME, value, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      domain: this.configService.get<string>('COOKIES_DOMAIN'),
+      expires,
+    })
+  }
+
   async logout(session: string, response: Response) {
     await this.db.collection<Session>(COLLECTION).deleteOne({ _id: new ObjectId(session) })
-
-    const domain = this.configService.get<string>('COOKIES_DOMAIN')
-    response.cookie(SESSION_COOKIE_NAME, '', {
-      ...COOKIE_OPTIONS,
-      domain,
-      expires: new Date(),
-    })
+    this.setCookie(response, '', new Date())
   }
 
   async getToken(payload: Payload): Promise<Token> {
@@ -82,12 +85,11 @@ export class AuthService {
     if (!user) {
       user = await this.usersService.insert({
         ln: { id: key },
-        permissions: {},
         email: `${key}`,
       })
     }
 
-    const payload: Payload = { sub: user._id.toString(), permissions: user.permissions }
+    const payload: Payload = { sub: user._id.toString(), permissions: user.permissions ?? {} }
     await this.db.collection<Session>(COLLECTION).updateOne(
       { _id: session._id },
       {
@@ -100,36 +102,32 @@ export class AuthService {
     this.eventEmitter.emit(session._id.toString(), new CallbackDto(Status.Ok))
   }
 
+  async createSession(payload: Payload, response: Response) {
+    const expired = expToDate(this.configService.get<string>('SESSION_EXPIRATION'))
+
+    const { _id } = await this.insert({
+      expired,
+      payload,
+    })
+    this.setCookie(response, _id.toString(), expired)
+    return this.getToken(payload)
+  }
+
   async login(loginDto: LoginDto, response: Response): Promise<Token> {
     let user = await this.usersService.findOne({ email: loginDto.email })
     if (user) {
-      if (!(await bcrypt.compare(loginDto.password, user.password))) {
+      if (!user.password || !(await bcrypt.compare(loginDto.password, user.password))) {
         throw new UnauthorizedException()
       }
     } else {
-      user = await this.usersService.insert({
-        ...loginDto,
-        permissions: {},
-      })
+      user = await this.usersService.insert(loginDto)
     }
 
-    const expired = expToDate(this.configService.get<string>('SESSION_EXPIRATION'))
     const payload: Payload = {
       sub: user._id.toString(),
-      permissions: user.permissions,
+      permissions: user.permissions ?? {},
     }
-
-    const session = {
-      expired,
-      payload,
-    }
-    const { _id } = await this.insert(session)
-    response.cookie(SESSION_COOKIE_NAME, _id.toString(), {
-      ...COOKIE_OPTIONS,
-      domain: this.configService.get<string>('COOKIES_DOMAIN'),
-      expires: expired,
-    })
-    return this.getToken(payload)
+    return await this.createSession(payload, response)
   }
 
   async getChallenge(response: Response): Promise<Challenge> {
@@ -146,11 +144,9 @@ export class AuthService {
       k1,
       expired: expToDate('10m'),
     })
-    response.cookie(SESSION_COOKIE_NAME, _id.toString(), {
-      ...COOKIE_OPTIONS,
-      domain: this.configService.get<string>('COOKIES_DOMAIN'),
-      expires: expToDate(this.configService.get<string>('SESSION_EXPIRATION')),
-    })
+
+    const expired = expToDate(this.configService.get<string>('SESSION_EXPIRATION'))
+    this.setCookie(response, _id.toString(), expired)
     return { k1, lnurl: lnurl.encode(callbackUrl).toUpperCase(), id: _id.toString() }
   }
 
