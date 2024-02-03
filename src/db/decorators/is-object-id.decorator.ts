@@ -1,3 +1,6 @@
+import { applyDecorators } from '@nestjs/common'
+import { ApiProperty } from '@nestjs/swagger'
+import { Transform } from 'class-transformer'
 import { registerDecorator, ValidationOptions } from 'class-validator'
 import { ObjectId } from 'mongodb'
 
@@ -18,4 +21,17 @@ export function IsObjectId(validationOptions?: ValidationOptions) {
       },
     })
   }
+}
+
+const toObjectId = (value: string) => {
+  return ObjectId.isValid(value) ? new ObjectId(value) : undefined
+}
+
+export function ToObjectId() {
+  return applyDecorators(
+    ApiProperty({
+      type: String,
+    }),
+    Transform(({ value }) => toObjectId(value))
+  )
 }
