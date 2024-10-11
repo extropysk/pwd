@@ -1,4 +1,4 @@
-import { Permission } from 'src/core/enums/permission.enum'
+import { Actions } from 'src/core/enums/actions.enum'
 import { Base } from 'src/db/interfaces/base.interface'
 
 export interface UserProvider {
@@ -11,6 +11,6 @@ export interface User extends Base {
   email: string
   ln?: UserProvider
   google?: UserProvider
-  permissions?: Record<string, Permission>
+  permissions?: Record<string, Actions>
   password?: string
 }

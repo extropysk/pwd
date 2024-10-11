@@ -1,6 +1,6 @@
-import { Permission } from 'src/core/enums/permission.enum'
+import { Actions } from 'src/core/enums/actions.enum'
 
 export interface Payload {
   sub: string
-  permissions: Record<string, Permission>
+  permissions: Record<string, Actions>
 }

@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
-import { Permission } from 'src/core/enums/permission.enum'
+import { Actions } from 'src/core/enums/actions.enum'
 
 export const PERMISSION_KEY = 'permission'
 
@@ -13,7 +13,7 @@ export class PermissionGuard implements CanActivate {
 
     const { permission, module } = this.reflector.getAllAndOverride<{
       module: string
-      permission: Permission
+      permission: Actions
     }>(PERMISSION_KEY, [context.getHandler(), context.getClass()])
 
     if (!module) {

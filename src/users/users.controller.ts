@@ -2,7 +2,7 @@ import { Body, Controller, Get, NotFoundException, Param, Put } from '@nestjs/co
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { Auth } from 'src/core/decorators/auth.decorator'
 import { Current } from 'src/core/decorators/current.decorator'
-import { Permission } from 'src/core/enums/permission.enum'
+import { Actions } from 'src/core/enums/actions.enum'
 import { Payload } from 'src/core/interfaces/payload.interface'
 import { IdDto } from 'src/db/dto/id.dto'
 import { UpdateResultDto } from 'src/db/dto/update-result.dto'
@@ -28,7 +28,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Get user' })
   @ApiOkResponse({ type: UserDto })
   @Get(':id')
-  @Auth(MODULE, Permission.READ)
+  @Auth(MODULE, Actions.READ)
   async findOne(@Param() { id }: IdDto) {
     const user = await this.usersService.findOne({ _id: id }, { password: 0 })
     if (!user) {
@@ -38,7 +38,7 @@ export class UsersController {
   }
 
   @ApiOkResponse({ type: UpdateResultDto })
-  @Auth(MODULE, Permission.UPDATE)
+  @Auth(MODULE, Actions.UPDATE)
   @Put(':id')
   async updatePermissions(@Param() { id }: IdDto, @Body() { permissions }: UpdatePermissionsDto) {
     return await this.usersService.updatePermissions(id, permissions)
