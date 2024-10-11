@@ -43,7 +43,7 @@ export class UsersService {
     return { ...user, _id, password: undefined }
   }
 
-  async upsert(user: WithoutId<User>): Promise<User> {
+  async upsert(user: Partial<User>): Promise<User> {
     return await this.db
       .collection<User>(COLLECTION)
       .findOneAndUpdate(

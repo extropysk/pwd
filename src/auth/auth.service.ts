@@ -89,7 +89,7 @@ export class AuthService {
       })
     }
 
-    const payload: Payload = { sub: user._id.toString(), permissions: user.permissions ?? {} }
+    const payload: Payload = { sub: user._id.toString(), permissions: user.permissions ?? [] }
     await this.db.collection<Session>(COLLECTION).updateOne(
       { _id: session._id },
       {
@@ -124,7 +124,7 @@ export class AuthService {
 
     const payload: Payload = {
       sub: user._id.toString(),
-      permissions: user.permissions ?? {},
+      permissions: user.permissions ?? [],
     }
     await this.createSession(payload, response)
     return await this.getToken(payload)

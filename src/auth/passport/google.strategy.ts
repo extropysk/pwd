@@ -35,7 +35,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
 
     const payload: Payload = {
       sub: user._id.toString(),
-      permissions: user.permissions ?? {},
+      permissions: user.permissions ?? [],
     }
     done(null, payload)
   }
