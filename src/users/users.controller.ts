@@ -6,7 +6,7 @@ import { Actions } from 'src/core/enums/actions.enum'
 import { Payload } from 'src/core/interfaces/payload.interface'
 import { IdDto } from 'src/db/dto/id.dto'
 import { UpdateResultDto } from 'src/db/dto/update-result.dto'
-import { UpdatePermissionsDto } from 'src/users/dto/update-permissions.dto'
+import { UpdatePermissionDto } from 'src/users/dto/update-permission.dto'
 import { UserDto } from 'src/users/dto/user.dto'
 import { UsersService } from 'src/users/users.service'
 
@@ -40,7 +40,7 @@ export class UsersController {
   @ApiOkResponse({ type: UpdateResultDto })
   @Auth(MODULE, Actions.UPDATE)
   @Put(':id')
-  async updatePermissions(@Param() { id }: IdDto, @Body() { permissions }: UpdatePermissionsDto) {
-    return await this.usersService.updatePermissions(id, permissions)
+  async updatePermission(@Param() { id }: IdDto, @Body() permission: UpdatePermissionDto) {
+    return await this.usersService.updatePermission(id, permission)
   }
 }
