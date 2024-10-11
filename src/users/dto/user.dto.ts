@@ -1,4 +1,4 @@
-import { Permission } from 'src/core/enums/permission.enum'
+import { PermissionDto } from 'src/core/dto/payload.dto'
 import { BaseDto } from 'src/db/dto/base.dto'
 import { User, UserProvider } from 'src/users/interfaces/user.interface'
 
@@ -11,5 +11,5 @@ export class UserDto extends BaseDto implements User {
   password?: string
   email: string
   key?: string
-  permissions: Record<string, Permission>
+  permissions?: PermissionDto[]
 }

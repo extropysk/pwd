@@ -1,10 +1,10 @@
 import { Inject } from '@nestjs/common'
 import * as bcrypt from 'bcrypt'
 import { Db, Filter, ObjectId } from 'mongodb'
-import { Permission } from 'src/core/enums/permission.enum'
 import { Payload } from 'src/core/interfaces/payload.interface'
 import { DATABASE } from 'src/db/database.module'
 import { Projection, WithoutId } from 'src/db/interfaces/base.interface'
+import { UpdatePermissionDto } from 'src/users/dto/update-permission.dto'
 import { User } from 'src/users/interfaces/user.interface'
 
 const COLLECTION = 'users'
@@ -23,13 +23,21 @@ export class UsersService {
     return await this.db.collection<User>(COLLECTION).findOne(filter, { projection })
   }
 
-  async updatePermissions(id: ObjectId, permissions: Record<string, Permission>) {
-    const user = {}
-    Object.keys(permissions).forEach((key) => {
-      user[`permissions.${key}`] = permissions[key]
-    })
+  async updatePermission(id: ObjectId, permission: UpdatePermissionDto) {
+    const res = await this.db
+      .collection<User>(COLLECTION)
+      .updateOne(
+        { _id: id, 'permissions.subject': permission.subject },
+        { $set: { 'permissions.$': permission } }
+      )
 
-    return await this.db.collection<User>(COLLECTION).updateOne({ _id: id }, { $set: user })
+    if (!res.matchedCount) {
+      return await this.db
+        .collection<User>(COLLECTION)
+        .updateOne({ _id: id }, { $push: { permissions: permission } })
+    }
+
+    return res
   }
 
   async insert(user: WithoutId<User>): Promise<User> {
@@ -43,7 +51,7 @@ export class UsersService {
     return { ...user, _id, password: undefined }
   }
 
-  async upsert(user: WithoutId<User>): Promise<User> {
+  async upsert(user: Partial<User>): Promise<User> {
     return await this.db
       .collection<User>(COLLECTION)
       .findOneAndUpdate(
