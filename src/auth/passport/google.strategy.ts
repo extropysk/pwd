@@ -22,20 +22,10 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     profile: any,
     done: VerifyCallback
   ): Promise<any> {
-    const { id, name, emails, photos } = profile
-
-    const user = await this.usersService.upsert({
-      email: emails[0].value,
-      google: {
-        id,
-        name: `${name.givenName} ${name.familyName}`,
-        photoUrl: photos[0].value,
-      },
-    })
+    const { emails } = profile
 
     const payload: Payload = {
-      sub: user._id.toString(),
-      permissions: user.permissions ?? [],
+      sub: emails[0].value,
     }
     done(null, payload)
   }

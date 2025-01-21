@@ -1,30 +1,30 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common'
 import { Request } from 'express'
-import { ObjectId } from 'mongodb'
-import { AuthService } from 'src/auth/auth.service'
+import { Payload } from 'src/core/interfaces/payload.interface'
+import { StorageService } from 'src/storage/storage.service'
 
 export const SESSION_COOKIE_NAME = 'session'
 export const SESSION_PREFIX = 'session'
 
 @Injectable()
 export class SessionGuard implements CanActivate {
-  constructor(private authService: AuthService) {}
+  constructor(private storageService: StorageService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest()
-    const sesionId = this.extractSessionFromCookie(request)
-    if (!sesionId) {
+    const session = this.extractSessionFromCookie(request)
+    if (!session) {
       throw new UnauthorizedException()
     }
 
-    const session = await this.authService.findOne({ _id: new ObjectId(sesionId) })
-    if (!session?.payload) {
+    const payload = await this.storageService.get<Payload>(`${SESSION_PREFIX}/${session}`)
+    if (!payload?.sub) {
       throw new UnauthorizedException()
     }
 
     // 💡 We're assigning the payload to the request object here
     // so that we can access it in our route handlers
-    request['user'] = session.payload
+    request['user'] = payload
     return true
   }
 

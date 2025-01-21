@@ -1,37 +1,27 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { JwtService } from '@nestjs/jwt'
-import * as bcrypt from 'bcrypt'
 import { randomBytes } from 'crypto'
 import { Response } from 'express'
 import * as lnurl from 'lnurl'
-import { Db, Filter, ObjectId } from 'mongodb'
 import { CallbackDto } from 'src/auth/dto/callback.dto'
-import { LoginDto } from 'src/auth/dto/login.dto'
 import { Status } from 'src/auth/enums/status.enums'
-import { SESSION_COOKIE_NAME } from 'src/auth/guards/session.guard'
+import { SESSION_COOKIE_NAME, SESSION_PREFIX } from 'src/auth/guards/session.guard'
 import { Challenge } from 'src/auth/interfaces/challenge.interface'
 import { Issuer } from 'src/auth/interfaces/issuer.interface'
-import { Session } from 'src/auth/interfaces/session.interface'
 import { Token } from 'src/auth/interfaces/token.interface'
 import { expToDate } from 'src/auth/utils/date-utils'
 import { Payload } from 'src/core/interfaces/payload.interface'
-import { DATABASE } from 'src/db/database.module'
-import { Base, WithoutId } from 'src/db/interfaces/base.interface'
-import { UsersService } from 'src/users/users.service'
-
-const COLLECTION = 'sessions'
+import { StorageService } from 'src/storage/storage.service'
 
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject(DATABASE)
-    private db: Db,
     private jwtService: JwtService,
     private configService: ConfigService,
-    private usersService: UsersService,
-    private eventEmitter: EventEmitter2
+    private eventEmitter: EventEmitter2,
+    private storageService: StorageService
   ) {}
 
   async setCookie(response: Response, value: string, expires: Date) {
@@ -44,8 +34,16 @@ export class AuthService {
     })
   }
 
+  async createSession(payload: Payload, response: Response) {
+    const id = randomBytes(32).toString('hex')
+    const expired = expToDate(this.configService.get<string>('SESSION_EXPIRATION'))
+
+    await this.storageService.set(`${SESSION_PREFIX}/${id}`, payload)
+    this.setCookie(response, id, expired)
+  }
+
   async logout(session: string, response: Response) {
-    await this.db.collection<Session>(COLLECTION).deleteOne({ _id: new ObjectId(session) })
+    await this.storageService.del(`${SESSION_PREFIX}/${session}`)
     this.setCookie(response, '', new Date())
   }
 
@@ -58,21 +56,8 @@ export class AuthService {
     return { ...payload, access_token: jwt }
   }
 
-  async findOne(filter: Filter<Session>) {
-    return await this.db
-      .collection<Session>(COLLECTION)
-      .findOne({ $and: [filter, { expired: { $gt: new Date() } }] })
-  }
-
-  async insert(session: WithoutId<Session>): Promise<Base> {
-    const { insertedId: _id } = await this.db
-      .collection<WithoutId<Session>>(COLLECTION)
-      .insertOne(session)
-    return { _id }
-  }
-
   async callback(k1: string, sig: string, key: string) {
-    const session = await this.findOne({ challenge: k1 })
+    const session = await this.storageService.get(`${SESSION_PREFIX}/${k1}`)
     if (!session) {
       throw new Error('Unauthorized')
     }
@@ -81,53 +66,9 @@ export class AuthService {
       throw new Error('Signature verification failed')
     }
 
-    let user = await this.usersService.findOne({ 'ln.id': key })
-    if (!user) {
-      user = await this.usersService.insert({
-        ln: { id: key },
-        email: `${key}`,
-      })
-    }
-
-    const payload: Payload = { sub: user._id.toString(), permissions: user.permissions ?? [] }
-    await this.db.collection<Session>(COLLECTION).updateOne(
-      { _id: session._id },
-      {
-        $set: {
-          payload,
-          expired: expToDate(this.configService.get<string>('SESSION_EXPIRATION')),
-        },
-      }
-    )
-    this.eventEmitter.emit(session._id.toString(), new CallbackDto(Status.Ok))
-  }
-
-  async createSession(payload: Payload, response: Response) {
-    const expired = expToDate(this.configService.get<string>('SESSION_EXPIRATION'))
-
-    const { _id } = await this.insert({
-      expired,
-      payload,
-    })
-    this.setCookie(response, _id.toString(), expired)
-  }
-
-  async login(loginDto: LoginDto, response: Response): Promise<Token> {
-    let user = await this.usersService.findOne({ email: loginDto.email })
-    if (user) {
-      if (!user.password || !(await bcrypt.compare(loginDto.password, user.password))) {
-        throw new UnauthorizedException()
-      }
-    } else {
-      user = await this.usersService.insert(loginDto)
-    }
-
-    const payload: Payload = {
-      sub: user._id.toString(),
-      permissions: user.permissions ?? [],
-    }
-    await this.createSession(payload, response)
-    return await this.getToken(payload)
+    const payload: Payload = { sub: key }
+    await this.storageService.set(`${SESSION_PREFIX}/${k1}`, payload)
+    this.eventEmitter.emit(k1, new CallbackDto(Status.Ok))
   }
 
   async getChallenge(response: Response): Promise<Challenge> {
@@ -140,14 +81,11 @@ export class AuthService {
     const appUrl = this.configService.get<string>('APP_URL')
     const callbackUrl = `${appUrl}/auth/callback?${params.toString()}`
 
-    const { _id } = await this.insert({
-      challenge: k1,
-      expired: expToDate('10m'),
-    })
-
+    await this.storageService.set(`${SESSION_PREFIX}/${k1}`, {}, '10m')
     const expired = expToDate(this.configService.get<string>('SESSION_EXPIRATION'))
-    this.setCookie(response, _id.toString(), expired)
-    return { k1, lnurl: lnurl.encode(callbackUrl).toUpperCase(), id: _id.toString() }
+    this.setCookie(response, k1, expired)
+
+    return { k1, lnurl: lnurl.encode(callbackUrl).toUpperCase(), id: k1 }
   }
 
   getIssuer(): Issuer {

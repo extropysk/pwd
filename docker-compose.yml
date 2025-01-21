@@ -13,6 +13,15 @@ services:
     networks:
       - default
 
+  redis:
+    image: redis:6.2-alpine
+    restart: unless-stopped
+    ports:
+      - 6379:6379
+    command: redis-server --requirepass ""
+    networks:
+      - default
+
   mongo:
     image: mongo:latest
     restart: unless-stopped

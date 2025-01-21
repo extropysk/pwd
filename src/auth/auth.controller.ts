@@ -1,5 +1,4 @@
 import {
-  Body,
   Controller,
   Get,
   MessageEvent,
@@ -21,7 +20,6 @@ import { CallbackDto } from 'src/auth/dto/callback.dto'
 import { ChallengeDto } from 'src/auth/dto/challenge.dto'
 import { EmptyDto } from 'src/auth/dto/empty.dto'
 import { IssuerDto } from 'src/auth/dto/issuer.dto'
-import { LoginDto } from 'src/auth/dto/login.dto'
 import { TokenDto } from 'src/auth/dto/token.dto'
 import { Status } from 'src/auth/enums/status.enums'
 import { GoogleAuthGuard } from 'src/auth/guards/google.guard'
@@ -42,13 +40,6 @@ export class AuthController {
   @Session()
   async getToken(@Current() current) {
     return this.authService.getToken(current)
-  }
-
-  @Post('/login')
-  @ApiOperation({ summary: 'Login' })
-  @ApiOkResponse({ type: TokenDto })
-  async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) response: Response) {
-    return await this.authService.login(loginDto, response)
   }
 
   @Post('/logout')
