@@ -66,7 +66,7 @@ export class AuthService {
       throw new Error('Signature verification failed')
     }
 
-    const payload: Payload = { sub: key }
+    const payload: Payload = { id: key, email: '' }
     await this.storageService.set(`${SESSION_PREFIX}/${k1}`, payload)
     this.eventEmitter.emit(k1, new CallbackDto(Status.Ok))
   }

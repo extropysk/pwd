@@ -9,8 +9,8 @@ import { UsersService } from 'src/users/users.service'
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(private configService: ConfigService, private usersService: UsersService) {
     super({
-      clientID: configService.get('GOOGLE_ID'),
-      clientSecret: configService.get('GOOGLE_SECRET'),
+      clientID: configService.get('GOOGLE_CLIENT_ID'),
+      clientSecret: configService.get('GOOGLE_CLIENT_SECRET'),
       callbackURL: `${configService.get('APP_URL')}/auth/google`,
       scope: ['profile', 'email'],
     })
@@ -25,7 +25,8 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     const { emails } = profile
 
     const payload: Payload = {
-      sub: emails[0].value,
+      id: profile.id,
+      email: emails[0].value,
     }
     done(null, payload)
   }
