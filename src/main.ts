@@ -14,16 +14,16 @@ async function bootstrap() {
   app.use(cookieParser())
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }))
 
-  const appConfig = configService.get<AppConfig>('app')
+  const appConfig = configService.get<AppConfig>('app') as AppConfig
   const swagger = new DocumentBuilder()
     .setTitle(appConfig.name)
-    .setVersion(appConfig.version?.substring(0, 7))
+    .setVersion(appConfig.version)
     .addBearerAuth()
     .build()
 
   const document = SwaggerModule.createDocument(app, swagger)
   SwaggerModule.setup('docs', app, document)
 
-  await app.listen(configService.get<number>('port'))
+  await app.listen(configService.get<number>('port') || 3000)
 }
 bootstrap()

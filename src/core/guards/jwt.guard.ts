@@ -18,11 +18,12 @@ export class JwtGuard implements CanActivate {
       throw new UnauthorizedException()
     }
     try {
-      const secret = crypto
-        .createHash('sha256')
-        .update(this.configService.get<string>('jwt.secret'))
-        .digest('hex')
-        .slice(0, 32)
+      const secretConfig = this.configService.get<string>('jwt.secret')
+      if (!secretConfig) {
+        throw new Error('Secret not found')
+      }
+
+      const secret = crypto.createHash('sha256').update(secretConfig).digest('hex').slice(0, 32)
 
       const payload = await jwt.verify(token, secret)
       if (typeof payload === 'string') {

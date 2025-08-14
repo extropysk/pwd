@@ -5,18 +5,18 @@ export interface RedisConfig {
 }
 
 export interface AppConfig {
-  name?: string
-  version?: string
+  name: string
+  version: string
   url?: string
 }
 
 export interface SessionConfig {
-  expiration?: string
+  expiration: string
 }
 
 export interface JwtConfig {
   secret?: string
-  expiration?: string
+  expiration: string
 }
 
 export interface GoogleConfig {
@@ -35,23 +35,23 @@ export interface Config {
 
 export default (): Config => {
   return {
-    port: parseInt(process.env.PORT, 10) || 3000,
+    port: parseInt(process.env.PORT || '3000', 10),
     app: {
-      name: process.env.APP_NAME,
-      version: process.env.APP_VERSION,
+      name: process.env.APP_NAME || 'app',
+      version: process.env.APP_VERSION?.substring(0, 7) || 'local',
       url: process.env.APP_URL,
     },
     redis: {
       host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT, 10) || 6379,
+      port: parseInt(process.env.REDIS_PORT || '6379', 10),
       password: process.env.REDIS_PASSWORD,
     },
     session: {
-      expiration: process.env.SESSION_EXPIRATION,
+      expiration: process.env.SESSION_EXPIRATION || '8h',
     },
     jwt: {
       secret: process.env.JWT_SECRET,
-      expiration: process.env.JWT_EXPIRATION,
+      expiration: process.env.JWT_EXPIRATION || '1h',
     },
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID,

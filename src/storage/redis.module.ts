@@ -10,7 +10,7 @@ export const REDIS = 'REDIS'
     {
       provide: REDIS,
       useFactory: async (configService: ConfigService) => {
-        const redisConfig = configService.get<RedisConfig>('redis')
+        const redisConfig = configService.get<RedisConfig>('redis') as RedisConfig
         return new Redis({
           host: redisConfig.host,
           port: redisConfig.port,
