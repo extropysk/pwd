@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { EventEmitter2 } from '@nestjs/event-emitter'
-import { JwtService } from '@nestjs/jwt'
 import { randomBytes } from 'crypto'
 import { Response } from 'express'
 import * as lnurl from 'lnurl'
@@ -10,16 +9,16 @@ import { LoginDto } from 'src/auth/dto/login.dto'
 import { Status } from 'src/auth/enums/status.enums'
 import { SESSION_COOKIE_NAME, SESSION_PREFIX } from 'src/auth/guards/session.guard'
 import { Challenge } from 'src/auth/interfaces/challenge.interface'
-import { Issuer } from 'src/auth/interfaces/issuer.interface'
 import { Token } from 'src/auth/interfaces/token.interface'
 import { expToDate } from 'src/auth/utils/date-utils'
 import { Payload } from 'src/core/interfaces/payload.interface'
 import { StorageService } from 'src/storage/storage.service'
+import * as crypto from 'crypto'
+import * as jwt from 'jsonwebtoken'
 
 @Injectable()
 export class AuthService {
   constructor(
-    private jwtService: JwtService,
     private configService: ConfigService,
     private eventEmitter: EventEmitter2,
     private storageService: StorageService
@@ -48,11 +47,16 @@ export class AuthService {
   }
 
   async getToken(payload: Payload): Promise<Token> {
-    const jwt = await this.jwtService.signAsync(payload, {
+    const secret = crypto
+      .createHash('sha256')
+      .update(this.configService.get<string>('JWT_SECRET'))
+      .digest('hex')
+      .slice(0, 32)
+
+    const token = jwt.sign(payload, secret, {
       expiresIn: this.configService.get<string>('JWT_EXPIRATION'),
-      secret: this.configService.get<string>('JWT_SECRET'),
     })
-    return { ...payload, access_token: jwt }
+    return { ...payload, access_token: token }
   }
 
   async login(loginDto: LoginDto, response: Response): Promise<Token> {
