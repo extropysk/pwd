@@ -1,4 +1,8 @@
-import { Challenge } from 'src/auth/interfaces/challenge.interface'
+export interface Challenge {
+  k1: string
+  lnurl: string
+  id: string
+}
 
 export class ChallengeDto implements Challenge {
   id: string

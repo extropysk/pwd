@@ -3,7 +3,7 @@ import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { Auth } from 'src/core/decorators/auth.decorator'
 import { Current } from 'src/core/decorators/current.decorator'
 import { PayloadDto } from 'src/core/dto/payload.dto'
-import { Payload } from 'src/core/interfaces/payload.interface'
+import { Payload } from 'src/core/dto/payload.dto'
 import { UsersService } from 'src/users/users.service'
 
 @ApiTags('users')

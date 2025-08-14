@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common'
 import { Request } from 'express'
-import { Payload } from 'src/core/interfaces/payload.interface'
+import { Payload } from 'src/core/dto/payload.dto'
 import { StorageService } from 'src/storage/storage.service'
 
 export const SESSION_COOKIE_NAME = 'session'
