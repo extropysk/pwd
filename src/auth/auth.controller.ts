@@ -85,16 +85,6 @@ export class AuthController {
     return fromEvent(this.eventEmitter, id).pipe(map((data: CallbackDto) => ({ data })))
   }
 
-  @ApiOperation({
-    summary: 'Get issuer',
-    description: 'Get public key, that can be used for JWT token verification.',
-  })
-  @ApiOkResponse({ type: IssuerDto, description: 'Public key' })
-  @Get('issuer')
-  async getIssuer() {
-    return await this.authService.getIssuer()
-  }
-
   @Get('google')
   @UseGuards(GoogleAuthGuard)
   async googleAuth(

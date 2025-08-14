@@ -50,22 +50,12 @@ export class AuthService {
   async getToken(payload: Payload): Promise<Token> {
     const jwt = await this.jwtService.signAsync(payload, {
       expiresIn: this.configService.get<string>('JWT_EXPIRATION'),
-      privateKey: this.configService.get<string>('JWT_PRIVATE_KEY'),
-      algorithm: 'ES256',
+      secret: this.configService.get<string>('JWT_SECRET'),
     })
     return { ...payload, access_token: jwt }
   }
 
   async login(loginDto: LoginDto, response: Response): Promise<Token> {
-    // let user = await this.usersService.findOne({ email: loginDto.email })
-    // if (user) {
-    //   if (!user.password || !(await bcrypt.compare(loginDto.password, user.password))) {
-    //     throw new UnauthorizedException()
-    //   }
-    // } else {
-    //   user = await this.usersService.insert(loginDto)
-    // }
-
     const payload: Payload = {
       sub: loginDto.email,
       email: loginDto.email,
@@ -104,10 +94,5 @@ export class AuthService {
     this.setCookie(response, k1, expired)
 
     return { k1, lnurl: lnurl.encode(callbackUrl).toUpperCase(), id: k1 }
-  }
-
-  getIssuer(): Issuer {
-    const jwtKey = this.configService.get<string>('JWT_PUBLIC_KEY')
-    return { jwtKey }
   }
 }

@@ -20,7 +20,7 @@ export class JwtGuard implements CanActivate {
     }
     try {
       const payload = await this.jwtService.verifyAsync(token, {
-        publicKey: this.configService.get<string>('JWT_PUBLIC_KEY'),
+        secret: this.configService.get<string>('JWT_SECRET'),
       })
 
       // 💡 We're assigning the payload to the request object here
