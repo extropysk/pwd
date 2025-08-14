@@ -38,8 +38,8 @@ export class AuthController {
   @ApiOkResponse({ type: TokenDto })
   @Get('token')
   @Session()
-  async getToken(@Current() current) {
-    return this.authService.getToken(current)
+  async getToken(@Current() current, @Res({ passthrough: true }) response: Response) {
+    return this.authService.createToken(current, response)
   }
 
   @Post('/logout')

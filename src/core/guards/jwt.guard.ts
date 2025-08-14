@@ -5,13 +5,15 @@ import { Request } from 'express'
 import * as crypto from 'crypto'
 import * as jwt from 'jsonwebtoken'
 
+export const JWT_COOKIE_NAME = 'token'
+
 @Injectable()
 export class JwtGuard implements CanActivate {
   constructor(private configService: ConfigService, private reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest()
-    const token = this.extractTokenFromHeader(request)
+    const token = this.extractToken(request)
     if (!token) {
       throw new UnauthorizedException()
     }
@@ -37,8 +39,17 @@ export class JwtGuard implements CanActivate {
     return true
   }
 
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? []
-    return type === 'Bearer' ? token : undefined
+  private extractToken(request: Request): string | null {
+    const token = request.cookies?.[JWT_COOKIE_NAME]
+    if (token) {
+      return token
+    }
+
+    const [type, bearerToken] = request.headers.authorization?.split(' ') ?? []
+    if (type === 'Bearer') {
+      return bearerToken
+    }
+
+    return null
   }
 }

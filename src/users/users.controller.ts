@@ -15,7 +15,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Get current user' })
   @ApiOkResponse({ type: PayloadDto })
   @Get('me')
-  getProfile(@Current() current: Payload) {
+  getCurrentUser(@Current() current: Payload) {
     return this.usersService.getCurrentUser(current)
   }
 }

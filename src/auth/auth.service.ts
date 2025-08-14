@@ -16,6 +16,7 @@ import { StorageService } from 'src/storage/storage.service'
 import * as crypto from 'crypto'
 import * as jwt from 'jsonwebtoken'
 import { JwtConfig } from 'src/configuration'
+import { JWT_COOKIE_NAME } from 'src/core/guards/jwt.guard'
 
 @Injectable()
 export class AuthService {
@@ -25,8 +26,8 @@ export class AuthService {
     private storageService: StorageService
   ) {}
 
-  async setCookie(response: Response, value: string, expires: Date) {
-    response.cookie(SESSION_COOKIE_NAME, value, {
+  setCookie(response: Response, name: string, value: string, expires: Date) {
+    response.cookie(name, value, {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
@@ -39,21 +40,22 @@ export class AuthService {
     const expired = expToDate(this.configService.get<string>('session.expiration'))
 
     await this.storageService.set(`${SESSION_PREFIX}/${id}`, payload)
-    this.setCookie(response, id, expired)
+    this.setCookie(response, SESSION_COOKIE_NAME, id, expired)
   }
 
   async logout(session: string, response: Response) {
     await this.storageService.del(`${SESSION_PREFIX}/${session}`)
-    this.setCookie(response, '', new Date())
+    this.setCookie(response, SESSION_COOKIE_NAME, '', new Date())
   }
 
-  async getToken(payload: Payload): Promise<Token> {
+  async createToken(payload: Payload, response: Response): Promise<Token> {
     const jwtConfig = this.configService.get<JwtConfig>('jwt')
 
     const secret = crypto.createHash('sha256').update(jwtConfig.secret).digest('hex').slice(0, 32)
     const token = jwt.sign(payload, secret, {
       expiresIn: jwtConfig.expiration,
     })
+    this.setCookie(response, JWT_COOKIE_NAME, token, expToDate(jwtConfig.expiration))
     return { ...payload, access_token: token }
   }
 
@@ -64,7 +66,7 @@ export class AuthService {
       roles: [],
     }
     await this.createSession(payload, response)
-    return await this.getToken(payload)
+    return await this.createToken(payload, response)
   }
 
   async callback(k1: string, sig: string, key: string) {
@@ -94,7 +96,7 @@ export class AuthService {
 
     await this.storageService.set(`${SESSION_PREFIX}/${k1}`, {}, '10m')
     const expired = expToDate(this.configService.get<string>('session.expiration'))
-    this.setCookie(response, k1, expired)
+    this.setCookie(response, SESSION_COOKIE_NAME, k1, expired)
 
     return { k1, lnurl: lnurl.encode(callbackUrl).toUpperCase(), id: k1 }
   }
