@@ -18,7 +18,7 @@ export class SessionGuard implements CanActivate {
     }
 
     const payload = await this.storageService.get<Payload>(`${SESSION_PREFIX}/${session}`)
-    if (!payload?.id) {
+    if (!payload?.sub) {
       throw new UnauthorizedException()
     }
 

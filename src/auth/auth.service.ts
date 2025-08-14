@@ -6,6 +6,7 @@ import { randomBytes } from 'crypto'
 import { Response } from 'express'
 import * as lnurl from 'lnurl'
 import { CallbackDto } from 'src/auth/dto/callback.dto'
+import { LoginDto } from 'src/auth/dto/login.dto'
 import { Status } from 'src/auth/enums/status.enums'
 import { SESSION_COOKIE_NAME, SESSION_PREFIX } from 'src/auth/guards/session.guard'
 import { Challenge } from 'src/auth/interfaces/challenge.interface'
@@ -29,7 +30,6 @@ export class AuthService {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
-      domain: this.configService.get<string>('COOKIES_DOMAIN'),
       expires,
     })
   }
@@ -56,6 +56,24 @@ export class AuthService {
     return { ...payload, access_token: jwt }
   }
 
+  async login(loginDto: LoginDto, response: Response): Promise<Token> {
+    // let user = await this.usersService.findOne({ email: loginDto.email })
+    // if (user) {
+    //   if (!user.password || !(await bcrypt.compare(loginDto.password, user.password))) {
+    //     throw new UnauthorizedException()
+    //   }
+    // } else {
+    //   user = await this.usersService.insert(loginDto)
+    // }
+
+    const payload: Payload = {
+      sub: loginDto.email,
+      email: loginDto.email,
+    }
+    await this.createSession(payload, response)
+    return await this.getToken(payload)
+  }
+
   async callback(k1: string, sig: string, key: string) {
     const session = await this.storageService.get(`${SESSION_PREFIX}/${k1}`)
     if (!session) {
@@ -66,7 +84,7 @@ export class AuthService {
       throw new Error('Signature verification failed')
     }
 
-    const payload: Payload = { id: key, email: '' }
+    const payload: Payload = { sub: key, email: '' }
     await this.storageService.set(`${SESSION_PREFIX}/${k1}`, payload)
     this.eventEmitter.emit(k1, new CallbackDto(Status.Ok))
   }

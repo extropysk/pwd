@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   MessageEvent,
@@ -28,6 +29,7 @@ import { Current } from 'src/core/decorators/current.decorator'
 import { PayloadDto } from 'src/core/dto/payload.dto'
 import { Payload } from 'src/core/interfaces/payload.interface'
 import { AuthService } from './auth.service'
+import { LoginDto } from 'src/auth/dto/login.dto'
 
 @ApiTags('auth')
 @Controller('auth')
@@ -106,5 +108,12 @@ export class AuthController {
     }
 
     return current
+  }
+
+  @Post('/login')
+  @ApiOperation({ summary: 'Login' })
+  @ApiOkResponse({ type: TokenDto })
+  async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) response: Response) {
+    return await this.authService.login(loginDto, response)
   }
 }

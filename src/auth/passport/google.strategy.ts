@@ -25,7 +25,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     const { emails } = profile
 
     const payload: Payload = {
-      id: profile.id,
+      sub: profile.id,
       email: emails[0].value,
     }
     done(null, payload)

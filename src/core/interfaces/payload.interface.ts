@@ -1,4 +1,4 @@
 export interface Payload {
-  id: string
+  sub: string
   email: string
 }
