@@ -15,6 +15,7 @@ import { Payload } from 'src/core/interfaces/payload.interface'
 import { StorageService } from 'src/storage/storage.service'
 import * as crypto from 'crypto'
 import * as jwt from 'jsonwebtoken'
+import { JwtConfig } from 'src/configuration'
 
 @Injectable()
 export class AuthService {
@@ -47,14 +48,11 @@ export class AuthService {
   }
 
   async getToken(payload: Payload): Promise<Token> {
-    const secret = crypto
-      .createHash('sha256')
-      .update(this.configService.get<string>('jwt.secret'))
-      .digest('hex')
-      .slice(0, 32)
+    const jwtConfig = this.configService.get<JwtConfig>('jwt')
 
+    const secret = crypto.createHash('sha256').update(jwtConfig.secret).digest('hex').slice(0, 32)
     const token = jwt.sign(payload, secret, {
-      expiresIn: this.configService.get<string>('jwt.expiration'),
+      expiresIn: jwtConfig.expiration,
     })
     return { ...payload, access_token: token }
   }

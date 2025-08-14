@@ -1,4 +1,39 @@
-export default () => {
+export interface RedisConfig {
+  host: string
+  port: number
+  password?: string
+}
+
+export interface AppConfig {
+  name?: string
+  version?: string
+  url?: string
+}
+
+export interface SessionConfig {
+  expiration?: string
+}
+
+export interface JwtConfig {
+  secret?: string
+  expiration?: string
+}
+
+export interface GoogleConfig {
+  clientId?: string
+  clientSecret?: string
+}
+
+export interface Config {
+  port: number
+  app: AppConfig
+  redis: RedisConfig
+  session: SessionConfig
+  jwt: JwtConfig
+  google: GoogleConfig
+}
+
+export default (): Config => {
   return {
     port: parseInt(process.env.PORT, 10) || 3000,
     app: {
@@ -7,8 +42,8 @@ export default () => {
       url: process.env.APP_URL,
     },
     redis: {
-      host: process.env.REDIS_HOST,
-      port: process.env.REDIS_PORT,
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT, 10) || 6379,
       password: process.env.REDIS_PASSWORD,
     },
     session: {

@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import * as cookieParser from 'cookie-parser'
 import { AppModule } from './app.module'
+import { AppConfig } from 'src/configuration'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
@@ -13,15 +14,16 @@ async function bootstrap() {
   app.use(cookieParser())
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }))
 
-  const config = new DocumentBuilder()
-    .setTitle(configService.get<string>('app.name'))
-    .setVersion(configService.get<string>('app.version')?.substring(0, 7))
+  const appConfig = configService.get<AppConfig>('app')
+  const swagger = new DocumentBuilder()
+    .setTitle(appConfig.name)
+    .setVersion(appConfig.version?.substring(0, 7))
     .addBearerAuth()
     .build()
 
-  const document = SwaggerModule.createDocument(app, config)
+  const document = SwaggerModule.createDocument(app, swagger)
   SwaggerModule.setup('docs', app, document)
 
-  await app.listen(configService.get<number>('port', 3000))
+  await app.listen(configService.get<number>('port'))
 }
 bootstrap()

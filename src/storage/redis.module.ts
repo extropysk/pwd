@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import Redis from 'ioredis'
+import { RedisConfig } from 'src/configuration'
 
 export const REDIS = 'REDIS'
 
@@ -9,10 +10,11 @@ export const REDIS = 'REDIS'
     {
       provide: REDIS,
       useFactory: async (configService: ConfigService) => {
+        const redisConfig = configService.get<RedisConfig>('redis')
         return new Redis({
-          host: configService.get<string>('redis.host'),
-          port: configService.get<number>('redis.port'),
-          password: configService.get<string>('redis.password'),
+          host: redisConfig.host,
+          port: redisConfig.port,
+          password: redisConfig.password,
         })
       },
       inject: [ConfigService],
