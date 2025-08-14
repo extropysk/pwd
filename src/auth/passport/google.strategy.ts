@@ -9,8 +9,8 @@ import { UsersService } from 'src/users/users.service'
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(private configService: ConfigService, private usersService: UsersService) {
     super({
-      clientID: configService.get('GOOGLE_CLIENT_ID'),
-      clientSecret: configService.get('GOOGLE_CLIENT_SECRET'),
+      clientID: configService.get('google.clientId'),
+      clientSecret: configService.get('google.clientSecret'),
       callbackURL: `${configService.get('APP_URL')}/auth/google`,
       scope: ['profile', 'email'],
     })

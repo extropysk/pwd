@@ -10,9 +10,9 @@ export const REDIS = 'REDIS'
       provide: REDIS,
       useFactory: async (configService: ConfigService) => {
         return new Redis({
-          host: configService.get<string>('REDIS_HOST'),
-          port: configService.get<number>('REDIS_PORT'),
-          password: configService.get<string>('REDIS_PASSWORD'),
+          host: configService.get<string>('redis.host'),
+          port: configService.get<number>('redis.port'),
+          password: configService.get<string>('redis.password'),
         })
       },
       inject: [ConfigService],

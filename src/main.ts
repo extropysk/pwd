@@ -14,14 +14,14 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }))
 
   const config = new DocumentBuilder()
-    .setTitle(configService.get<string>('APP_NAME'))
-    .setVersion(configService.get<string>('APP_VERSION')?.substring(0, 7))
+    .setTitle(configService.get<string>('app.name'))
+    .setVersion(configService.get<string>('app.version')?.substring(0, 7))
     .addBearerAuth()
     .build()
 
   const document = SwaggerModule.createDocument(app, config)
   SwaggerModule.setup('docs', app, document)
 
-  await app.listen(configService.get<number>('PORT', 3000))
+  await app.listen(configService.get<number>('port', 3000))
 }
 bootstrap()

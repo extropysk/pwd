@@ -35,7 +35,7 @@ export class AuthService {
 
   async createSession(payload: Payload, response: Response) {
     const id = randomBytes(32).toString('hex')
-    const expired = expToDate(this.configService.get<string>('SESSION_EXPIRATION'))
+    const expired = expToDate(this.configService.get<string>('session.expiration'))
 
     await this.storageService.set(`${SESSION_PREFIX}/${id}`, payload)
     this.setCookie(response, id, expired)
@@ -49,12 +49,12 @@ export class AuthService {
   async getToken(payload: Payload): Promise<Token> {
     const secret = crypto
       .createHash('sha256')
-      .update(this.configService.get<string>('JWT_SECRET'))
+      .update(this.configService.get<string>('jwt.secret'))
       .digest('hex')
       .slice(0, 32)
 
     const token = jwt.sign(payload, secret, {
-      expiresIn: this.configService.get<string>('JWT_EXPIRATION'),
+      expiresIn: this.configService.get<string>('jwt.expiration'),
     })
     return { ...payload, access_token: token }
   }
@@ -90,11 +90,11 @@ export class AuthService {
       k1,
       tag: 'login',
     })
-    const appUrl = this.configService.get<string>('APP_URL')
+    const appUrl = this.configService.get<string>('app.url')
     const callbackUrl = `${appUrl}/auth/callback?${params.toString()}`
 
     await this.storageService.set(`${SESSION_PREFIX}/${k1}`, {}, '10m')
-    const expired = expToDate(this.configService.get<string>('SESSION_EXPIRATION'))
+    const expired = expToDate(this.configService.get<string>('session.expiration'))
     this.setCookie(response, k1, expired)
 
     return { k1, lnurl: lnurl.encode(callbackUrl).toUpperCase(), id: k1 }
