@@ -61,6 +61,7 @@ export class AuthService {
     const payload: Payload = {
       sub: loginDto.email,
       email: loginDto.email,
+      roles: [],
     }
     await this.createSession(payload, response)
     return await this.getToken(payload)
@@ -76,7 +77,7 @@ export class AuthService {
       throw new Error('Signature verification failed')
     }
 
-    const payload: Payload = { sub: key, email: '' }
+    const payload: Payload = { sub: key, email: '', roles: [] }
     await this.storageService.set(`${SESSION_PREFIX}/${k1}`, payload)
     this.eventEmitter.emit(k1, new CallbackDto(Status.Ok))
   }
