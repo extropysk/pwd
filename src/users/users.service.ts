@@ -1,5 +1,4 @@
-import { PayloadDto } from 'src/core/dto/payload.dto'
-import { Payload } from 'src/core/dto/payload.dto'
+import { Payload, PayloadDto } from '@extropysk/nest-core'
 
 export class UsersService {
   getCurrentUser(current: Payload): PayloadDto {

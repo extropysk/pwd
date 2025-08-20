@@ -1,4 +1,4 @@
-import { Payload, PayloadDto } from 'src/core/dto/payload.dto'
+import { Payload, PayloadDto } from '@extropysk/nest-core'
 
 export interface Token extends Payload {
   access_token: string

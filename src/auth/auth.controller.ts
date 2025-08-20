@@ -24,8 +24,8 @@ import { TokenDto } from 'src/auth/dto/token.dto'
 import { Status } from 'src/auth/enums/status.enums'
 import { GoogleAuthGuard } from 'src/auth/guards/google.guard'
 import { SESSION_COOKIE_NAME } from 'src/auth/guards/session.guard'
-import { Current } from 'src/core/decorators/current.decorator'
-import { Payload, PayloadDto } from 'src/core/dto/payload.dto'
+
+import { Payload, PayloadDto, Current } from '@extropysk/nest-core'
 import { AuthService } from './auth.service'
 import { LoginDto } from 'src/auth/dto/login.dto'
 

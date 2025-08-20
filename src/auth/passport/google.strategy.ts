@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { PassportStrategy } from '@nestjs/passport'
 import { Strategy, VerifyCallback } from 'passport-google-oauth2'
-import { Payload } from 'src/core/dto/payload.dto'
+import { Payload } from '@extropysk/nest-core'
 import { UsersService } from 'src/users/users.service'
 
 @Injectable()

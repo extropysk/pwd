@@ -11,12 +11,11 @@ import { SESSION_COOKIE_NAME, SESSION_PREFIX } from 'src/auth/guards/session.gua
 import { Challenge } from 'src/auth/dto/challenge.dto'
 import { Token } from 'src/auth/dto/token.dto'
 import { expToDate } from 'src/auth/utils/date-utils'
-import { Payload } from 'src/core/dto/payload.dto'
+import { JWT_COOKIE_NAME, Payload } from '@extropysk/nest-core'
 import { StorageService } from 'src/storage/storage.service'
 import * as crypto from 'crypto'
 import * as jwt from 'jsonwebtoken'
 import { JwtConfig } from 'src/configuration'
-import { JWT_COOKIE_NAME } from 'src/core/guards/jwt.guard'
 
 @Injectable()
 export class AuthService {
