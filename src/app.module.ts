@@ -6,6 +6,8 @@ import { AuthModule } from './auth/auth.module'
 import { StorageModule } from 'src/storage/storage.module'
 import configuration from 'src/configuration'
 import { CoreModule } from '@extropysk/nest-core'
+import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core'
+import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod'
 
 @Module({
   imports: [
@@ -20,6 +22,16 @@ import { CoreModule } from '@extropysk/nest-core'
     UsersModule,
     ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
     EventEmitterModule.forRoot(),
+  ],
+  providers: [
+    {
+      provide: APP_PIPE,
+      useClass: ZodValidationPipe,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ZodSerializerInterceptor,
+    },
   ],
 })
 export class AppModule {}

@@ -1,6 +1,8 @@
-import { IsEmail, IsNotEmpty } from 'class-validator'
+import { createZodDto } from 'nestjs-zod'
+import z from 'zod'
 
-export class LoginDto {
-  @IsEmail()
-  email: string
-}
+const LoginSchema = z.object({
+  email: z.email(),
+})
+
+export class LoginDto extends createZodDto(LoginSchema) {}

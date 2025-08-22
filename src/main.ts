@@ -1,10 +1,10 @@
-import { ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import * as cookieParser from 'cookie-parser'
 import { AppModule } from './app.module'
 import { AppConfig } from 'src/configuration'
+import { cleanupOpenApiDoc } from 'nestjs-zod'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
@@ -12,7 +12,6 @@ async function bootstrap() {
 
   app.enableCors({ credentials: true, origin: true })
   app.use(cookieParser())
-  app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }))
 
   const appConfig = configService.get<AppConfig>('app') as AppConfig
   const swagger = new DocumentBuilder()
@@ -22,7 +21,7 @@ async function bootstrap() {
     .build()
 
   const document = SwaggerModule.createDocument(app, swagger)
-  SwaggerModule.setup('docs', app, document)
+  SwaggerModule.setup('docs', app, cleanupOpenApiDoc(document))
 
   await app.listen(configService.get<number>('port') || 3000)
 }
