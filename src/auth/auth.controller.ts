@@ -25,7 +25,7 @@ import { Status } from 'src/auth/enums/status.enums'
 import { GoogleAuthGuard } from 'src/auth/guards/google.guard'
 import { SESSION_COOKIE_NAME } from 'src/auth/guards/session.guard'
 
-import { Payload, PayloadDto, Current } from '@extropysk/nest-core'
+import { Payload, PayloadDto, Me } from '@extropysk/nest-core'
 import { AuthService } from './auth.service'
 import { LoginDto } from 'src/auth/dto/login.dto'
 
@@ -38,7 +38,7 @@ export class AuthController {
   @ApiOkResponse({ type: TokenDto })
   @Get('token')
   @Session()
-  async getToken(@Current() current, @Res({ passthrough: true }) response: Response) {
+  async getToken(@Me() current, @Res({ passthrough: true }) response: Response) {
     return this.authService.createToken(current, response)
   }
 
@@ -87,7 +87,7 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   async googleAuth(
     @Res({ passthrough: true }) response: Response,
-    @Current() current: Payload,
+    @Me() current: Payload,
     @State() state: AuthState
   ) {
     await this.authService.createSession(current, response)

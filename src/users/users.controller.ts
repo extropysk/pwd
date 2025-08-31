@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common'
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
-import { Auth, Current, PayloadDto, Payload } from '@extropysk/nest-core'
+import { Me, PayloadDto, Payload, Auth } from '@extropysk/nest-core'
 import { UsersService } from 'src/users/users.service'
 
 @ApiTags('users')
@@ -12,7 +12,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Get current user' })
   @ApiOkResponse({ type: PayloadDto })
   @Get('me')
-  getCurrentUser(@Current() current: Payload) {
+  getCurrentUser(@Me() current: Payload) {
     return this.usersService.getCurrentUser(current)
   }
 }
