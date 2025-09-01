@@ -25,12 +25,13 @@ import { Status } from 'src/auth/enums/status.enums'
 import { GoogleAuthGuard } from 'src/auth/guards/google.guard'
 import { SESSION_COOKIE_NAME } from 'src/auth/guards/session.guard'
 
-import { Payload, PayloadDto, Me } from '@extropysk/nest-core'
+import { Payload, PayloadDto, Me, Public } from '@extropysk/nest-core'
 import { AuthService } from './auth.service'
 import { LoginDto } from 'src/auth/dto/login.dto'
 
 @ApiTags('auth')
 @Controller('auth')
+@Public()
 export class AuthController {
   constructor(private authService: AuthService, private eventEmitter: EventEmitter2) {}
 

@@ -380,10 +380,10 @@
     minimatch "^3.1.2"
     strip-json-comments "^3.1.1"
 
-"@extropysk/nest-core@^1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@extropysk/nest-core/-/nest-core-1.1.0.tgz#fabcf3269ac290f5f508249f9ceee2c6e52a108e"
-  integrity sha512-QzCwBNmU4qUg0YN5Ll4CGWMFTl0EiqlDbqiiE/GbKWj40jtzkKq3ToDuq9HD4JXkbXxtvQd/O30RUSs+lNr5qw==
+"@extropysk/nest-core@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@extropysk/nest-core/-/nest-core-1.2.0.tgz#7016150b25324f8d7bf41951b92b4a9a78d292af"
+  integrity sha512-DqSMYjXRGyh8LtSmN6WdFG308TlR9cq5StJW44zQNI0VCw6Ya6epazfqNEoKZ54lUGFWufKBs5ZOqYXOHL/rBA==
   dependencies:
     crypto "^1.0.1"
     jsonwebtoken "^9.0.2"
