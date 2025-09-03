@@ -15,6 +15,7 @@ import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod'
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('jwt.secret') as string,
+        expiresIn: configService.get<string>('jwt.expiresIn'),
       }),
     }),
     StorageModule,

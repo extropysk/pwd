@@ -11,10 +11,8 @@ import { SESSION_COOKIE_NAME, SESSION_PREFIX } from 'src/auth/guards/session.gua
 import { Challenge } from 'src/auth/dto/challenge.dto'
 import { Token } from 'src/auth/dto/token.dto'
 import { expToDate } from 'src/auth/utils/date-utils'
-import { JWT_COOKIE_NAME, Payload } from '@extropysk/nest-core'
+import { JWT_COOKIE_NAME, JwtService, Payload } from '@extropysk/nest-core'
 import { StorageService } from 'src/storage/storage.service'
-import * as crypto from 'crypto'
-import * as jwt from 'jsonwebtoken'
 import { JwtConfig } from 'src/configuration'
 
 @Injectable()
@@ -22,7 +20,8 @@ export class AuthService {
   constructor(
     private configService: ConfigService,
     private eventEmitter: EventEmitter2,
-    private storageService: StorageService
+    private storageService: StorageService,
+    private jwtService: JwtService
   ) {}
 
   setCookie(response: Response, name: string, value: string, expires: Date) {
@@ -50,15 +49,8 @@ export class AuthService {
   async createToken(payload: Payload, response: Response): Promise<Token> {
     const jwtConfig = this.configService.get<JwtConfig>('jwt')
 
-    if (!jwtConfig?.secret) {
-      throw new Error('Secret not found')
-    }
-
-    const secret = crypto.createHash('sha256').update(jwtConfig?.secret).digest('hex').slice(0, 32)
-    const token = jwt.sign(payload, secret, {
-      expiresIn: jwtConfig.expiration,
-    })
-    this.setCookie(response, JWT_COOKIE_NAME, token, expToDate(jwtConfig.expiration))
+    const token = this.jwtService.sign(payload)
+    this.setCookie(response, JWT_COOKIE_NAME, token, expToDate(jwtConfig?.expiration ?? '1h'))
     return { ...payload, access_token: token }
   }
 
