@@ -35,7 +35,7 @@ export class AuthService {
 
   async createSession(payload: Payload, response: Response) {
     const id = randomBytes(32).toString('hex')
-    const expired = expToDate(this.configService.get<string>('session.expiration') || '8h')
+    const expired = expToDate(this.configService.get<string>('session.expiresIn') || '8h')
 
     await this.storageService.set(`${SESSION_PREFIX}/${id}`, payload)
     this.setCookie(response, SESSION_COOKIE_NAME, id, expired)
@@ -47,10 +47,10 @@ export class AuthService {
   }
 
   async createToken(payload: Payload, response: Response): Promise<Token> {
-    const jwtConfig = this.configService.get<JwtConfig>('jwt')
+    const jwtConfig = this.configService.get<JwtConfig>('jwt') as JwtConfig
 
     const token = this.jwtService.sign(payload)
-    this.setCookie(response, JWT_COOKIE_NAME, token, expToDate(jwtConfig?.expiration ?? '1h'))
+    this.setCookie(response, JWT_COOKIE_NAME, token, expToDate(jwtConfig.expiresIn))
     return { ...payload, access_token: token }
   }
 
@@ -90,7 +90,7 @@ export class AuthService {
     const callbackUrl = `${appUrl}/auth/callback?${params.toString()}`
 
     await this.storageService.set(`${SESSION_PREFIX}/${k1}`, {}, '10m')
-    const expired = expToDate(this.configService.get<string>('session.expiration') || '8h')
+    const expired = expToDate(this.configService.get<string>('session.expiresIn') || '8h')
     this.setCookie(response, SESSION_COOKIE_NAME, k1, expired)
 
     return { k1, lnurl: lnurl.encode(callbackUrl).toUpperCase(), id: k1 }

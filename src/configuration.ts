@@ -11,12 +11,12 @@ export interface AppConfig {
 }
 
 export interface SessionConfig {
-  expiration: string
+  expiresIn: string
 }
 
 export interface JwtConfig {
-  secret?: string
-  expiration: string
+  secret: string
+  expiresIn: string
 }
 
 export interface GoogleConfig {
@@ -47,11 +47,11 @@ export default (): Config => {
       password: process.env.REDIS_PASSWORD,
     },
     session: {
-      expiration: process.env.SESSION_EXPIRATION || '8h',
+      expiresIn: process.env.SESSION_EXPIRATION || '8h',
     },
     jwt: {
-      secret: process.env.JWT_SECRET,
-      expiration: process.env.JWT_EXPIRATION || '1h',
+      secret: process.env.JWT_SECRET || 'secret',
+      expiresIn: process.env.JWT_EXPIRATION || '1h',
     },
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID,

@@ -4,7 +4,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter'
 import { UsersModule } from 'src/users/users.module'
 import { AuthModule } from './auth/auth.module'
 import { StorageModule } from 'src/storage/storage.module'
-import configuration from 'src/configuration'
+import configuration, { JwtConfig } from 'src/configuration'
 import { CoreModule } from '@extropysk/nest-core'
 import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core'
 import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod'
@@ -13,10 +13,12 @@ import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod'
   imports: [
     CoreModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('jwt.secret') as string,
-        expiresIn: configService.get<string>('jwt.expiresIn'),
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const jwt = configService.get<JwtConfig>('jwt') as JwtConfig
+        return {
+          jwt,
+        }
+      },
     }),
     StorageModule,
     AuthModule,
